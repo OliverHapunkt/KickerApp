@@ -958,13 +958,20 @@
                 // Update target number
                 this.targetNumberEl.textContent = this.currentGoalTarget;
                 
-                // Show/hide audio status based on detection enabled
+                // Show/hide audio elements
                 if (this.soundDetectionEnabled) {
                     this.audioStatus.classList.remove('hidden');
                     this.calibrateBtn.classList.remove('hidden');
                 } else {
                     this.audioStatus.classList.add('hidden');
                     this.calibrateBtn.classList.add('hidden');
+                }
+                
+                // Update calibrate button text based on calibration status
+                if (this.isCalibrated) {
+                    this.calibrateBtn.textContent = '⚙️ Neu Kalibrieren';
+                } else {
+                    this.calibrateBtn.textContent = '⚙️ Kalibrieren';
                 }
             }
 
@@ -1008,7 +1015,16 @@
                 if (!this.soundDetectionEnabled) {
                     // Enable sound detection
                     if (!this.isCalibrated) {
-                        alert('Bitte kalibriere zuerst das Mikrofon!');
+                        // Show calibration button and start calibration
+                        this.soundDetectionEnabled = true;
+                        this.soundToggle.classList.add('active');
+                        this.updateDisplay();
+                        
+                        // Automatically start calibration
+                        setTimeout(() => {
+                            alert('Mikrofon wird aktiviert! Bitte kalibriere das System für optimale Tor-Erkennung.');
+                            this.startCalibration();
+                        }, 500);
                         return;
                     }
                     
@@ -1020,6 +1036,8 @@
                     } catch (error) {
                         console.error('Audio initialization failed:', error);
                         alert('Mikrofon konnte nicht aktiviert werden. Stelle sicher, dass du die Berechtigung erteilt hast!');
+                        this.soundDetectionEnabled = false;
+                        this.soundToggle.classList.remove('active');
                     }
                 } else {
                     // Disable sound detection
@@ -1221,7 +1239,14 @@
                 this.isCalibrated = true;
                 this.cancelCalibration();
                 
-                alert(`Kalibrierung abgeschlossen! 🎯\n\nSchwellenwert: ${Math.round(this.goalThreshold)}\nDu kannst jetzt die Auto-Erkennung aktivieren.`);
+                alert(`Kalibrierung abgeschlossen! 🎯\n\nSchwellenwert: ${Math.round(this.goalThreshold)}\nAuto-Erkennung ist jetzt aktiv!`);
+                
+                // Start listening after calibration
+                this.initializeAudio().then(() => {
+                    this.startListening();
+                }).catch(error => {
+                    console.error('Failed to start listening after calibration:', error);
+                });
             }
 
             cancelCalibration() {
