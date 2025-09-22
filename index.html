@@ -2,518 +2,1326 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>iPad Safari Mikrofon-Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tischkicker Trainer</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-height: 100vh;
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
-        
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.2);
-            text-align: center;
-        }
-        
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            color: #fff;
-        }
-        
-        button {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             color: white;
-            border: none;
-            padding: 18px 36px;
-            font-size: 18px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(90deg, #00c851 0%, #007e33 100%);
+            box-shadow: 0 4px 20px rgba(0, 200, 81, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            margin-top: 8px;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 2px solid #444;
             border-radius: 25px;
             cursor: pointer;
-            margin: 15px;
-            min-width: 200px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
-            font-weight: 600;
+            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+            color: white;
+            min-width: 100px;
         }
-        
-        button:hover, button:active {
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #00c851, #007e33);
+            border-color: #00c851;
+            box-shadow: 0 5px 15px rgba(0, 200, 81, 0.4);
+        }
+
+        .mode-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 15px rgba(0, 200, 81, 0.2);
         }
-        
-        button:disabled {
-            background: #666;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .status {
-            margin: 25px 0;
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            border-radius: 15px;
+            gap: 30px;
+        }
+
+        .training-area {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        @media (max-width: 768px) {
+            .training-area { 
+                flex-direction: column; 
+                gap: 20px; 
+                align-items: center;
+            }
+        }
+
+        .pass-section {
+            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid #444;
+            text-align: center;
+            min-width: 280px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #00c851;
             font-weight: 600;
-            font-size: 16px;
-            min-height: 60px;
+        }
+
+        .pass-arrows {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            position: relative;
+            height: 120px;
+        }
+
+        .arrow-container {
+            position: relative;
+            width: 140px;
+            height: 120px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        
-        .success {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
+
+        .arrow {
+            position: absolute;
+            width: 4px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 2px;
+            transition: all 0.4s ease;
+            transform-origin: bottom center;
         }
-        
-        .error {
-            background: linear-gradient(135deg, #f44336, #d32f2f);
-            color: white;
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -6px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 12px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.4s ease;
         }
-        
-        .warning {
-            background: linear-gradient(135deg, #ff9800, #f57c00);
-            color: white;
+
+        .arrow.active {
+            background: linear-gradient(180deg, #00c851, #007e33);
+            box-shadow: 0 0 25px rgba(0, 200, 81, 0.6);
+            transform: scale(1.1);
         }
-        
-        .info {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            color: white;
+
+        .arrow.active::after {
+            border-bottom-color: #00c851;
+            filter: drop-shadow(0 0 8px rgba(0, 200, 81, 0.6));
         }
-        
-        .ios-steps {
-            text-align: left;
-            margin: 25px 0;
-            background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(5px);
+
+        .arrow-up {
+            bottom: 30px;
+            left: 50px;
+            transform: rotate(-35deg);
+            transform-origin: bottom center;
         }
-        
-        .ios-steps h3 {
-            color: #FFE082;
-            margin-bottom: 15px;
-            text-align: center;
+
+        .arrow-up.active {
+            transform: rotate(-35deg) scale(1.1);
         }
-        
-        .ios-steps ol {
-            padding-left: 20px;
+
+        .arrow-down {
+            bottom: 30px;
+            right: 50px;
+            transform: rotate(35deg);
+            transform-origin: bottom center;
         }
-        
-        .ios-steps li {
-            margin: 12px 0;
-            line-height: 1.5;
+
+        .arrow-down.active {
+            transform: rotate(35deg) scale(1.1);
         }
-        
-        .ios-steps strong {
-            color: #FFE082;
+
+        .arrow-container::before {
+            content: '';
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            backdrop-filter: blur(10px);
         }
-        
-        pre {
-            background: rgba(0,0,0,0.3);
-            padding: 15px;
-            border-radius: 10px;
-            overflow-x: auto;
-            text-align: left;
-            font-size: 14px;
-            color: #E0E0E0;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .level-bar {
-            width: 100%;
-            height: 40px;
-            background: rgba(255,255,255,0.2);
+
+        .goal-section {
+            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
             border-radius: 20px;
-            margin: 20px 0;
-            overflow: hidden;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 2px solid #444;
+            text-align: center;
+            min-width: 280px;
+        }
+
+        .goal-frame {
+            background: linear-gradient(145deg, #333, #222);
+            border-radius: 15px 15px 8px 8px;
+            padding: 15px;
+            box-shadow: 
+                inset 0 4px 8px rgba(0,0,0,0.3),
+                0 4px 15px rgba(0,0,0,0.4);
+            border: 2px solid #555;
             position: relative;
         }
-        
-        .level-fill {
+
+        .goal-frame::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 15px;
+            right: 15px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #666, transparent);
+            border-radius: 2px;
+        }
+
+        .goal-visualization {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin: 15px 0;
+        }
+
+        .goal-segment {
+            width: 35px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .goal-segment.active {
+            background: linear-gradient(135deg, #00c851, #007e33);
+            border-color: #00c851;
+            box-shadow: 0 0 20px rgba(0, 200, 81, 0.6);
+            transform: scale(1.1);
+        }
+
+        .target-number {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #00c851;
+            text-shadow: 2px 2px 8px rgba(0, 200, 81, 0.5);
+            margin: 15px 0;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #444;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #00c851;
+            margin-bottom: 3px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-width: 100px;
+        }
+
+        .btn-hit {
+            background: linear-gradient(135deg, #00c851, #007e33);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 200, 81, 0.4);
+        }
+
+        .btn-hit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 200, 81, 0.6);
+        }
+
+        .btn-miss {
+            background: linear-gradient(135deg, #ff6b6b, #e55555);
+            color: white;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-miss:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00c851, #007e33);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 200, 81, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 200, 81, 0.6);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #666, #555);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+            padding: 10px 15px;
+            border-radius: 25px;
+            border: 1px solid #444;
+        }
+
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #444;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle.active {
+            background: #00c851;
+        }
+
+        .toggle::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .toggle.active::before {
+            transform: translateX(26px);
+        }
+
+        .toggle-label {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        /* Audio Control Styles */
+        .audio-status {
+            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #444;
+            text-align: center;
+            min-width: 280px;
+        }
+
+        .audio-status.listening {
+            border-color: #00c851;
+            box-shadow: 0 0 20px rgba(0, 200, 81, 0.3);
+        }
+
+        .audio-level {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .audio-level-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #FFC107, #F44336);
+            background: linear-gradient(90deg, #00c851, #FFC107, #ff6b6b);
             width: 0%;
             transition: width 0.1s ease;
+            border-radius: 4px;
+        }
+
+        /* Calibration Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
             border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid #00c851;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
         }
-        
-        .level-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: bold;
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal h2 {
+            color: #00c851;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .modal p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .calibration-step {
+            background: rgba(0, 200, 81, 0.1);
+            border: 2px solid #00c851;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .calibration-progress {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .progress-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.completed {
+            background: #00c851;
+            box-shadow: 0 0 10px rgba(0, 200, 81, 0.5);
+        }
+
+        .progress-dot.active {
+            background: #FFC107;
+            animation: pulse 1s infinite;
+        }
+
+        /* False Positive Correction */
+        .false-positive-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
             color: white;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-        }
-        
-        .warning-box {
-            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
             padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            border: 2px solid rgba(255,255,255,0.3);
+            text-align: center;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+            z-index: 999;
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5);
         }
-        
-        .tip-box {
-            background: linear-gradient(135deg, #4ECDC4, #44A08D);
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px 0;
-            border: 2px solid rgba(255,255,255,0.3);
+
+        .false-positive-banner.show {
+            transform: translateY(0);
         }
-        
+
+        .undo-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .undo-btn:hover {
+            background: white;
+            color: #ff6b6b;
+            transform: scale(1.05);
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Mobile Optimizations */
         @media (max-width: 768px) {
-            body {
-                margin: 10px;
-                padding: 10px;
-            }
-            
-            .container {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 1.5rem;
-            }
-            
-            button {
-                padding: 15px 30px;
-                font-size: 16px;
-                min-width: 180px;
-            }
+            .header h1 { font-size: 2rem; }
+            .training-area { flex-direction: column; gap: 20px; }
+            .pass-section, .goal-section, .audio-status { min-width: 250px; }
+            .target-number { font-size: 2.5rem; }
+            .goal-segment { width: 30px; height: 60px; font-size: 1rem; }
+            .controls { flex-direction: column; align-items: center; }
+            .btn { min-width: 180px; }
+            .mode-selector { padding: 15px 10px; }
+            .modal { padding: 30px 20px; }
+            .false-positive-banner { padding: 15px; }
+            .undo-btn { margin-left: 0; margin-top: 10px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🍎 iPad Safari Mikrofon-Test</h1>
-        
-        <div class="warning-box">
-            <h3>⚠️ iOS Safari Besonderheiten</h3>
-            <p>Safari blockiert Mikrofon standardmäßig sehr streng. Du musst explizit erlauben!</p>
+    <div class="header">
+        <h1>🏆 Tischkicker Trainer</h1>
+        <p>Verbessere deine Präzision!</p>
+    </div>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" data-mode="pass">📤 Pass</button>
+        <button class="mode-btn" data-mode="goal">⚽ Tor</button>
+        <button class="mode-btn" data-mode="combo">🎯 Kombi</button>
+    </div>
+
+    <div class="main-container">
+        <div class="training-area">
+            <div class="pass-section" id="passSection">
+                <div class="section-title">Pass Richtung</div>
+                <div class="pass-arrows">
+                    <div class="arrow-container">
+                        <div class="arrow arrow-up active" data-direction="up"></div>
+                        <div class="arrow arrow-down" data-direction="down"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="goal-section hidden" id="goalSection">
+                <div class="section-title">Schuss Ziel</div>
+                <div class="goal-frame">
+                    <div class="goal-visualization">
+                        <div class="goal-segment" data-position="1">1</div>
+                        <div class="goal-segment" data-position="2">2</div>
+                        <div class="goal-segment active" data-position="3">3</div>
+                        <div class="goal-segment" data-position="4">4</div>
+                        <div class="goal-segment" data-position="5">5</div>
+                    </div>
+                </div>
+                <div class="target-number pulse" id="targetNumber">3</div>
+            </div>
+
+            <div class="audio-status hidden" id="audioStatus">
+                <div class="section-title">🎤 Audio Status</div>
+                <div id="audioStatusText">Mikrofon inaktiv</div>
+                <div class="audio-level">
+                    <div class="audio-level-fill" id="audioLevelFill"></div>
+                </div>
+            </div>
         </div>
-        
-        <div id="status" class="status info">
-            Bereit für iOS Safari Test. Klicke "Test starten" und achte auf das Mikrofon-Symbol!
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-value" id="totalActions">0</div>
+                <div class="stat-label">Aktionen</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="hitCount">0</div>
+                <div class="stat-label">Treffer</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="missCount">0</div>
+                <div class="stat-label">Daneben</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="hitRate">0%</div>
+                <div class="stat-label">Quote</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="passCount">0</div>
+                <div class="stat-label">Pässe</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="goalCount">0</div>
+                <div class="stat-label">Schüsse</div>
+            </div>
         </div>
-        
-        <button onclick="testMicrophone()" id="testBtn">🎤 Test starten</button>
-        <button onclick="resetTest()" id="resetBtn" disabled>🔄 Reset</button>
-        
-        <div class="level-bar" id="levelBarContainer" style="display: none;">
-            <div class="level-fill" id="levelFill"></div>
-            <div class="level-text" id="levelText">0%</div>
+
+        <div class="controls">
+            <button class="btn btn-hit" id="hitBtn">✓ Hit</button>
+            <button class="btn btn-miss" id="missBtn">✗ Miss</button>
+            <button class="btn btn-secondary" id="resetBtn">🔄 Reset</button>
+            <div class="toggle-container">
+                <span class="toggle-label">🎤 Auto-Erkennung</span>
+                <div class="toggle" id="soundToggle"></div>
+            </div>
+            <button class="btn btn-secondary hidden" id="calibrateBtn">⚙️ Kalibrieren</button>
         </div>
-        
-        <div class="ios-steps">
-            <h3>📋 iPad Safari Anleitung:</h3>
-            <ol>
-                <li><strong>"Test starten"</strong> antippen</li>
-                <li><strong>Oben in der Adressleiste</strong> erscheint ein <strong>🎤 Mikrofon-Symbol</strong></li>
-                <li><strong>Auf das 🎤 Symbol tippen</strong></li>
-                <li><strong>"Erlauben"</strong> wählen</li>
-                <li><strong>Eventuell Seite neu laden</strong> (nach unten wischen)</li>
-            </ol>
+    </div>
+
+    <!-- False Positive Banner -->
+    <div class="false-positive-banner" id="falsePositiveBanner">
+        <strong>🎯 Tor automatisch erkannt!</strong>
+        <span id="falsePosiveText">War das kein Tor?</span>
+        <button class="undo-btn" id="undoBtn">↶ Rückgängig</button>
+    </div>
+
+    <!-- Calibration Modal -->
+    <div class="modal-overlay" id="calibrationModal">
+        <div class="modal">
+            <h2>🎯 Mikrofon Kalibrierung</h2>
+            <p id="calibrationText">Schieße 3 Tore und bestätige jedes Mal. Die App lernt das Geräusch!</p>
+            
+            <div class="calibration-step" id="calibrationStep">
+                <h3 id="stepTitle">Schritt 1 von 3</h3>
+                <p id="stepDescription">Schieße jetzt ein Tor und drücke danach "Bestätigen"</p>
+                <div class="audio-level">
+                    <div class="audio-level-fill" id="calibrationLevelFill"></div>
+                </div>
+            </div>
+
+            <div class="calibration-progress">
+                <div class="progress-dot active" id="dot1"></div>
+                <div class="progress-dot" id="dot2"></div>
+                <div class="progress-dot" id="dot3"></div>
+            </div>
+
+            <div id="calibrationControls">
+                <button class="btn btn-primary" id="confirmShotBtn">✓ Tor Bestätigen</button>
+                <button class="btn btn-secondary" id="cancelCalibrationBtn">✗ Abbrechen</button>
+            </div>
         </div>
-        
-        <div class="tip-box">
-            <h3>💡 Safari-spezifische Lösungen:</h3>
-            <p><strong>Einstellungen → Safari → Mikrofon:</strong> "Fragen" oder "Erlauben" einstellen</p>
-            <p><strong>Einstellungen → Datenschutz → Mikrofon:</strong> Safari aktivieren</p>
-        </div>
-        
-        <div id="logs" style="display: none;"></div>
-        <button onclick="toggleLogs()" id="logBtn">📝 Debug-Logs anzeigen</button>
     </div>
 
     <script>
-        let logs = [];
-        let isActive = false;
-        let audioContext = null;
-        let analyser = null;
-        let microphone = null;
-        let dataArray = null;
-        let stream = null;
-        
-        function addLog(message) {
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = `[${timestamp}] ${message}`;
-            logs.push(logEntry);
-            console.log(message);
-            
-            // Auto-show logs on error
-            if (message.includes('❌') || message.includes('Error')) {
-                document.getElementById('logs').style.display = 'block';
-                updateLogsDisplay();
-            }
-        }
-        
-        function updateLogsDisplay() {
-            const logsDiv = document.getElementById('logs');
-            if (logs.length > 0) {
-                logsDiv.innerHTML = '<h3>📝 Debug-Logs:</h3><pre>' + logs.join('\n') + '</pre>';
-            }
-        }
-        
-        function updateStatus(message, type) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = `status ${type}`;
-        }
-        
-        function toggleLogs() {
-            const logsDiv = document.getElementById('logs');
-            const logBtn = document.getElementById('logBtn');
-            
-            if (logsDiv.style.display === 'none') {
-                logsDiv.style.display = 'block';
-                updateLogsDisplay();
-                logBtn.textContent = '🙈 Logs verbergen';
-            } else {
-                logsDiv.style.display = 'none';
-                logBtn.textContent = '📝 Debug-Logs anzeigen';
-            }
-        }
-        
-        function resetTest() {
-            addLog('=== RESET ===');
-            
-            if (stream) {
-                stream.getTracks().forEach(track => {
-                    track.stop();
-                    addLog(`Track gestoppt: ${track.kind}`);
-                });
-                stream = null;
-            }
-            
-            if (audioContext && audioContext.state !== 'closed') {
-                audioContext.close();
-                addLog('AudioContext geschlossen');
-            }
-            
-            isActive = false;
-            audioContext = null;
-            analyser = null;
-            microphone = null;
-            dataArray = null;
-            
-            document.getElementById('levelBarContainer').style.display = 'none';
-            document.getElementById('testBtn').disabled = false;
-            document.getElementById('resetBtn').disabled = true;
-            
-            updateStatus('Reset abgeschlossen. Bereit für neuen Test.', 'info');
-        }
-        
-        async function testMicrophone() {
-            addLog('=== iPad SAFARI MIKROFON-TEST GESTARTET ===');
-            
-            // iOS/Safari spezifische Checks
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-            
-            addLog(`iOS erkannt: ${isIOS}`);
-            addLog(`Safari erkannt: ${isSafari}`);
-            addLog(`User Agent: ${navigator.userAgent}`);
-            addLog(`Secure Context: ${window.isSecureContext}`);
-            addLog(`Protocol: ${window.location.protocol}`);
-            
-            if (!isIOS || !isSafari) {
-                addLog('⚠️ Warnung: Nicht iOS Safari - könnte anders verhalten');
-            }
-            
-            document.getElementById('testBtn').disabled = true;
-            updateStatus('🔄 Safari-Test läuft... Schau in die Adressleiste nach dem 🎤 Symbol!', 'warning');
-            
-            // MediaDevices API Check
-            if (!navigator.mediaDevices) {
-                addLog('❌ navigator.mediaDevices nicht verfügbar');
-                updateStatus('❌ MediaDevices API nicht unterstützt', 'error');
-                document.getElementById('testBtn').disabled = false;
-                return;
-            }
-            
-            if (!navigator.mediaDevices.getUserMedia) {
-                addLog('❌ getUserMedia nicht verfügbar');
-                updateStatus('❌ getUserMedia nicht unterstützt', 'error');
-                document.getElementById('testBtn').disabled = false;
-                return;
-            }
-            
-            addLog('✅ MediaDevices API verfügbar');
-            
-            try {
-                // iOS Safari braucht sehr spezifische Audio-Constraints
-                addLog('Fordere Mikrofon mit iOS-optimierten Einstellungen an...');
+        class FoosballTrainer {
+            constructor() {
+                this.currentMode = 'pass';
+                this.currentPassDirection = 'up';
+                this.currentGoalTarget = 3;
+                this.totalActions = 0;
+                this.hitCount = 0;
+                this.missCount = 0;
+                this.passCount = 0;
+                this.goalCount = 0;
+                this.soundDetectionEnabled = false;
                 
-                const constraints = {
-                    audio: {
-                        echoCancellation: false,
-                        noiseSuppression: false,
-                        autoGainControl: false,
-                        // iOS Safari mag diese Constraints besser
-                        sampleRate: { ideal: 44100 },
-                        channelCount: { ideal: 1 }
+                // Audio Detection Variables
+                this.audioContext = null;
+                this.analyser = null;
+                this.microphone = null;
+                this.dataArray = null;
+                this.stream = null;
+                this.isListening = false;
+                
+                // Calibration Data
+                this.isCalibrated = false;
+                this.calibrationSamples = [];
+                this.goalThreshold = 70; // Will be calculated from calibration
+                this.baselineNoise = 20;  // Will be calculated from calibration
+                this.lastActionTime = 0;
+                this.detectionCooldown = 2000; // 2 seconds between detections
+                
+                // False Positive Correction
+                this.lastAutoDetection = null;
+                this.falsePositiveTimeout = null;
+                
+                // Data for future analysis feature
+                this.detailedStats = {
+                    passByDirection: { up: { hits: 0, misses: 0 }, down: { hits: 0, misses: 0 } },
+                    goalsByPosition: {
+                        1: { hits: 0, misses: 0 },
+                        2: { hits: 0, misses: 0 },
+                        3: { hits: 0, misses: 0 },
+                        4: { hits: 0, misses: 0 },
+                        5: { hits: 0, misses: 0 }
                     }
                 };
                 
-                addLog('Constraint-Details: ' + JSON.stringify(constraints, null, 2));
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            initializeElements() {
+                this.modeButtons = document.querySelectorAll('.mode-btn');
+                this.passSection = document.getElementById('passSection');
+                this.goalSection = document.getElementById('goalSection');
+                this.audioStatus = document.getElementById('audioStatus');
+                this.arrows = document.querySelectorAll('.arrow');
+                this.goalSegments = document.querySelectorAll('.goal-segment');
+                this.targetNumberEl = document.getElementById('targetNumber');
+                this.totalActionsEl = document.getElementById('totalActions');
+                this.hitCountEl = document.getElementById('hitCount');
+                this.missCountEl = document.getElementById('missCount');
+                this.hitRateEl = document.getElementById('hitRate');
+                this.passCountEl = document.getElementById('passCount');
+                this.goalCountEl = document.getElementById('goalCount');
+                this.hitBtn = document.getElementById('hitBtn');
+                this.missBtn = document.getElementById('missBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.soundToggle = document.getElementById('soundToggle');
+                this.calibrateBtn = document.getElementById('calibrateBtn');
                 
-                // iOS Safari: Nutzer muss explizit interagieren
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                // Audio elements
+                this.audioStatusText = document.getElementById('audioStatusText');
+                this.audioLevelFill = document.getElementById('audioLevelFill');
                 
-                addLog('✅ Stream erhalten!');
-                addLog(`Stream aktiv: ${stream.active}`);
-                addLog(`Audio Tracks: ${stream.getAudioTracks().length}`);
+                // Modal elements
+                this.calibrationModal = document.getElementById('calibrationModal');
+                this.calibrationText = document.getElementById('calibrationText');
+                this.stepTitle = document.getElementById('stepTitle');
+                this.stepDescription = document.getElementById('stepDescription');
+                this.calibrationLevelFill = document.getElementById('calibrationLevelFill');
+                this.confirmShotBtn = document.getElementById('confirmShotBtn');
+                this.cancelCalibrationBtn = document.getElementById('cancelCalibrationBtn');
+                this.progressDots = [
+                    document.getElementById('dot1'),
+                    document.getElementById('dot2'),
+                    document.getElementById('dot3')
+                ];
                 
-                if (stream.getAudioTracks().length > 0) {
-                    const track = stream.getAudioTracks()[0];
-                    addLog(`Track Label: "${track.label}"`);
-                    addLog(`Track State: ${track.readyState}`);
-                    addLog(`Track Enabled: ${track.enabled}`);
-                    
-                    // iOS Safari Audio-Eigenschaften
-                    const settings = track.getSettings();
-                    addLog(`Track Settings: ${JSON.stringify(settings, null, 2)}`);
+                // False positive elements
+                this.falsePositiveBanner = document.getElementById('falsePositiveBanner');
+                this.undoBtn = document.getElementById('undoBtn');
+            }
+
+            bindEvents() {
+                // Mode selection
+                this.modeButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.setMode(e.target.dataset.mode);
+                    });
+                });
+
+                // Controls
+                this.hitBtn.addEventListener('click', () => this.registerHit());
+                this.missBtn.addEventListener('click', () => this.registerMiss());
+                this.resetBtn.addEventListener('click', () => this.resetStats());
+                this.soundToggle.addEventListener('click', () => this.toggleSoundDetection());
+                this.calibrateBtn.addEventListener('click', () => this.startCalibration());
+                
+                // Modal controls
+                this.confirmShotBtn.addEventListener('click', () => this.confirmCalibrationShot());
+                this.cancelCalibrationBtn.addEventListener('click', () => this.cancelCalibration());
+                
+                // False positive correction
+                this.undoBtn.addEventListener('click', () => this.undoLastDetection());
+            }
+
+            setMode(mode) {
+                this.currentMode = mode;
+                
+                // Update mode buttons
+                this.modeButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.mode === mode);
+                });
+
+                // Show/hide sections based on mode
+                switch(mode) {
+                    case 'pass':
+                        this.passSection.classList.remove('hidden');
+                        this.goalSection.classList.add('hidden');
+                        break;
+                    case 'goal':
+                        this.passSection.classList.add('hidden');
+                        this.goalSection.classList.remove('hidden');
+                        break;
+                    case 'combo':
+                        this.passSection.classList.remove('hidden');
+                        this.goalSection.classList.remove('hidden');
+                        break;
+                }
+
+                this.updateDisplay();
+            }
+
+            generateNext() {
+                // Generate new pass direction (only up/down now)
+                const passDirections = ['up', 'down'];
+                this.currentPassDirection = passDirections[Math.floor(Math.random() * 2)];
+
+                // Generate new goal target
+                this.currentGoalTarget = Math.floor(Math.random() * 5) + 1;
+
+                this.updateDisplay();
+                this.animateNew();
+            }
+
+            registerHit(isAutoDetected = false) {
+                this.totalActions++;
+                this.hitCount++;
+                
+                // Store auto-detection info for false positive correction
+                if (isAutoDetected) {
+                    this.lastAutoDetection = {
+                        time: Date.now(),
+                        action: 'hit'
+                    };
+                    this.showFalsePositiveBanner();
                 }
                 
-                // AudioContext für iOS Safari
+                // Track detailed stats for analysis
+                if (this.currentMode === 'pass' || this.currentMode === 'combo') {
+                    this.passCount++;
+                    this.detailedStats.passByDirection[this.currentPassDirection].hits++;
+                }
+                if (this.currentMode === 'goal' || this.currentMode === 'combo') {
+                    this.goalCount++;
+                    this.detailedStats.goalsByPosition[this.currentGoalTarget].hits++;
+                }
+                
+                this.updateStats();
+                setTimeout(() => this.generateNext(), 1000);
+            }
+
+            registerMiss(isAutoDetected = false) {
+                this.totalActions++;
+                this.missCount++;
+                
+                // Store auto-detection info for false positive correction
+                if (isAutoDetected) {
+                    this.lastAutoDetection = {
+                        time: Date.now(),
+                        action: 'miss'
+                    };
+                    this.showFalsePositiveBanner();
+                }
+                
+                // Track detailed stats for analysis
+                if (this.currentMode === 'pass' || this.currentMode === 'combo') {
+                    this.passCount++;
+                    this.detailedStats.passByDirection[this.currentPassDirection].misses++;
+                }
+                if (this.currentMode === 'goal' || this.currentMode === 'combo') {
+                    this.goalCount++;
+                    this.detailedStats.goalsByPosition[this.currentGoalTarget].misses++;
+                }
+                
+                this.updateStats();
+                setTimeout(() => this.generateNext(), 1000);
+            }
+
+            updateDisplay() {
+                // Update pass arrows (only up/down now)
+                this.arrows.forEach(arrow => {
+                    arrow.classList.toggle('active', 
+                        arrow.dataset.direction === this.currentPassDirection);
+                });
+
+                // Update goal segments
+                this.goalSegments.forEach((segment, index) => {
+                    segment.classList.toggle('active', 
+                        index + 1 === this.currentGoalTarget);
+                });
+
+                // Update target number
+                this.targetNumberEl.textContent = this.currentGoalTarget;
+                
+                // Show/hide audio status based on detection enabled
+                if (this.soundDetectionEnabled) {
+                    this.audioStatus.classList.remove('hidden');
+                    this.calibrateBtn.classList.remove('hidden');
+                } else {
+                    this.audioStatus.classList.add('hidden');
+                    this.calibrateBtn.classList.add('hidden');
+                }
+            }
+
+            updateStats() {
+                this.totalActionsEl.textContent = this.totalActions;
+                this.hitCountEl.textContent = this.hitCount;
+                this.missCountEl.textContent = this.missCount;
+                this.passCountEl.textContent = this.passCount;
+                this.goalCountEl.textContent = this.goalCount;
+                
+                // Calculate hit rate
+                const hitRate = this.totalActions > 0 ? 
+                    Math.round((this.hitCount / this.totalActions) * 100) : 0;
+                this.hitRateEl.textContent = hitRate + '%';
+            }
+
+            resetStats() {
+                this.totalActions = 0;
+                this.hitCount = 0;
+                this.missCount = 0;
+                this.passCount = 0;
+                this.goalCount = 0;
+                
+                // Reset detailed stats
+                this.detailedStats = {
+                    passByDirection: { up: { hits: 0, misses: 0 }, down: { hits: 0, misses: 0 } },
+                    goalsByPosition: {
+                        1: { hits: 0, misses: 0 },
+                        2: { hits: 0, misses: 0 },
+                        3: { hits: 0, misses: 0 },
+                        4: { hits: 0, misses: 0 },
+                        5: { hits: 0, misses: 0 }
+                    }
+                };
+                
+                this.updateStats();
+                this.generateNext();
+            }
+
+            async toggleSoundDetection() {
+                if (!this.soundDetectionEnabled) {
+                    // Enable sound detection
+                    if (!this.isCalibrated) {
+                        alert('Bitte kalibriere zuerst das Mikrofon!');
+                        return;
+                    }
+                    
+                    try {
+                        await this.initializeAudio();
+                        this.soundDetectionEnabled = true;
+                        this.soundToggle.classList.add('active');
+                        this.startListening();
+                    } catch (error) {
+                        console.error('Audio initialization failed:', error);
+                        alert('Mikrofon konnte nicht aktiviert werden. Stelle sicher, dass du die Berechtigung erteilt hast!');
+                    }
+                } else {
+                    // Disable sound detection
+                    this.stopListening();
+                    this.soundDetectionEnabled = false;
+                    this.soundToggle.classList.remove('active');
+                }
+                
+                this.updateDisplay();
+            }
+
+            async initializeAudio() {
                 try {
-                    addLog('Erstelle AudioContext für iOS Safari...');
+                    // Request microphone access
+                    this.stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: false,
+                            noiseSuppression: false,
+                            autoGainControl: false,
+                            sampleRate: { ideal: 44100 },
+                            channelCount: { ideal: 1 }
+                        }
+                    });
+
+                    // Create audio context
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     
-                    // iOS braucht webkit prefix manchmal noch
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    addLog(`AudioContext State: ${audioContext.state}`);
-                    
-                    // iOS Safari: AudioContext muss nach User-Gesture resumiert werden
-                    if (audioContext.state === 'suspended') {
-                        addLog('AudioContext suspended - versuche resume...');
-                        await audioContext.resume();
-                        addLog(`AudioContext State nach Resume: ${audioContext.state}`);
+                    if (this.audioContext.state === 'suspended') {
+                        await this.audioContext.resume();
                     }
-                    
-                    // Analyser erstellen
-                    analyser = audioContext.createAnalyser();
-                    analyser.fftSize = 256;
-                    analyser.smoothingTimeConstant = 0.3; // iOS Safari mag kleinere Werte
-                    
-                    addLog(`Analyser FFT Size: ${analyser.fftSize}`);
-                    addLog(`Analyser Frequency Bin Count: ${analyser.frequencyBinCount}`);
-                    
-                    // Mikrofon verbinden
-                    microphone = audioContext.createMediaStreamSource(stream);
-                    microphone.connect(analyser);
-                    
-                    // Buffer für Daten
-                    const bufferLength = analyser.frequencyBinCount;
-                    dataArray = new Uint8Array(bufferLength);
-                    
-                    addLog('✅ Audio-Pipeline erfolgreich aufgebaut!');
-                    
-                    // UI für Level-Anzeige
-                    document.getElementById('levelBarContainer').style.display = 'block';
-                    document.getElementById('resetBtn').disabled = false;
-                    
-                    isActive = true;
-                    updateStatus('✅ Mikrofon funktioniert! Level-Anzeige läuft...', 'success');
-                    
-                    // Audio-Analyse starten
-                    startAnalysis();
-                    
-                } catch (audioError) {
-                    addLog(`❌ AudioContext Fehler: ${audioError.name}: ${audioError.message}`);
-                    updateStatus('❌ Audio-Analyse fehlgeschlagen', 'error');
-                    
-                    // Stream trotzdem stoppen
-                    if (stream) {
-                        stream.getTracks().forEach(track => track.stop());
+
+                    // Create analyser
+                    this.analyser = this.audioContext.createAnalyser();
+                    this.analyser.fftSize = 256;
+                    this.analyser.smoothingTimeConstant = 0.3;
+
+                    // Connect microphone to analyser
+                    this.microphone = this.audioContext.createMediaStreamSource(this.stream);
+                    this.microphone.connect(this.analyser);
+
+                    // Buffer for audio data
+                    const bufferLength = this.analyser.frequencyBinCount;
+                    this.dataArray = new Uint8Array(bufferLength);
+
+                    console.log('Audio initialized successfully');
+                    return true;
+                } catch (error) {
+                    console.error('Audio initialization failed:', error);
+                    throw error;
+                }
+            }
+
+            startListening() {
+                this.isListening = true;
+                this.audioStatus.classList.add('listening');
+                this.audioStatusText.textContent = 'Höre auf Tore...';
+                this.analyzeAudio();
+            }
+
+            stopListening() {
+                this.isListening = false;
+                this.audioStatus.classList.remove('listening');
+                this.audioStatusText.textContent = 'Mikrofon inaktiv';
+                
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream = null;
+                }
+                
+                if (this.audioContext && this.audioContext.state !== 'closed') {
+                    this.audioContext.close();
+                    this.audioContext = null;
+                }
+            }
+
+            analyzeAudio() {
+                if (!this.isListening || !this.analyser) return;
+
+                // Get frequency data
+                this.analyser.getByteFrequencyData(this.dataArray);
+
+                // Calculate average level
+                let sum = 0;
+                for (let i = 0; i < this.dataArray.length; i++) {
+                    sum += this.dataArray[i];
+                }
+                const averageLevel = sum / this.dataArray.length;
+                const levelPercent = Math.round((averageLevel / 255) * 100);
+
+                // Update UI
+                this.audioLevelFill.style.width = levelPercent + '%';
+
+                // Check for goal detection
+                if (this.isCalibrated && this.canDetectGoal()) {
+                    if (averageLevel > this.goalThreshold) {
+                        this.onGoalDetected(averageLevel);
+                    }
+                }
+
+                // Continue analyzing
+                requestAnimationFrame(() => this.analyzeAudio());
+            }
+
+            canDetectGoal() {
+                const now = Date.now();
+                return (now - this.lastActionTime) > this.detectionCooldown;
+            }
+
+            onGoalDetected(level) {
+                console.log(`Goal detected! Level: ${level}, Threshold: ${this.goalThreshold}`);
+                this.lastActionTime = Date.now();
+                
+                // Auto-register as hit (could be made configurable)
+                this.registerHit(true);
+            }
+
+            // CALIBRATION SYSTEM
+            startCalibration() {
+                this.calibrationSamples = [];
+                this.calibrationModal.classList.add('active');
+                this.updateCalibrationStep(1);
+                
+                // Initialize audio for calibration
+                this.initializeAudio().then(() => {
+                    this.startCalibrationListening();
+                }).catch(error => {
+                    alert('Mikrofon konnte nicht aktiviert werden!');
+                    this.cancelCalibration();
+                });
+            }
+
+            startCalibrationListening() {
+                if (!this.analyser) return;
+                
+                this.analyser.getByteFrequencyData(this.dataArray);
+                let sum = 0;
+                for (let i = 0; i < this.dataArray.length; i++) {
+                    sum += this.dataArray[i];
+                }
+                const averageLevel = sum / this.dataArray.length;
+                const levelPercent = Math.round((averageLevel / 255) * 100);
+                
+                this.calibrationLevelFill.style.width = levelPercent + '%';
+                
+                if (this.calibrationModal.classList.contains('active')) {
+                    requestAnimationFrame(() => this.startCalibrationListening());
+                }
+            }
+
+            confirmCalibrationShot() {
+                if (!this.analyser) return;
+                
+                // Capture current audio level
+                this.analyser.getByteFrequencyData(this.dataArray);
+                let sum = 0;
+                for (let i = 0; i < this.dataArray.length; i++) {
+                    sum += this.dataArray[i];
+                }
+                const averageLevel = sum / this.dataArray.length;
+                
+                this.calibrationSamples.push(averageLevel);
+                console.log(`Calibration shot ${this.calibrationSamples.length}: ${averageLevel}`);
+                
+                // Update progress
+                this.progressDots[this.calibrationSamples.length - 1].classList.remove('active');
+                this.progressDots[this.calibrationSamples.length - 1].classList.add('completed');
+                
+                if (this.calibrationSamples.length < 3) {
+                    // Next step
+                    this.updateCalibrationStep(this.calibrationSamples.length + 1);
+                    if (this.calibrationSamples.length < 3) {
+                        this.progressDots[this.calibrationSamples.length].classList.add('active');
+                    }
+                } else {
+                    // Calibration complete
+                    this.completeCalibration();
+                }
+            }
+
+            updateCalibrationStep(step) {
+                this.stepTitle.textContent = `Schritt ${step} von 3`;
+                this.stepDescription.textContent = `Schieße jetzt Tor ${step} und drücke danach "Bestätigen"`;
+            }
+
+            completeCalibration() {
+                // Calculate threshold from samples
+                const maxLevel = Math.max(...this.calibrationSamples);
+                const avgLevel = this.calibrationSamples.reduce((a, b) => a + b, 0) / this.calibrationSamples.length;
+                
+                // Set threshold slightly below average of samples
+                this.goalThreshold = avgLevel * 0.8;
+                this.baselineNoise = Math.min(...this.calibrationSamples) * 0.5;
+                
+                console.log('Calibration complete!');
+                console.log('Samples:', this.calibrationSamples);
+                console.log('Threshold set to:', this.goalThreshold);
+                console.log('Baseline noise:', this.baselineNoise);
+                
+                this.isCalibrated = true;
+                this.cancelCalibration();
+                
+                alert(`Kalibrierung abgeschlossen! 🎯\n\nSchwellenwert: ${Math.round(this.goalThreshold)}\nDu kannst jetzt die Auto-Erkennung aktivieren.`);
+            }
+
+            cancelCalibration() {
+                this.calibrationModal.classList.remove('active');
+                this.calibrationSamples = [];
+                
+                // Reset progress dots
+                this.progressDots.forEach((dot, index) => {
+                    dot.classList.remove('active', 'completed');
+                    if (index === 0) dot.classList.add('active');
+                });
+                
+                // Stop audio if it was started for calibration
+                if (!this.soundDetectionEnabled) {
+                    this.stopListening();
+                }
+            }
+
+            // FALSE POSITIVE CORRECTION
+            showFalsePositiveBanner() {
+                this.falsePositiveBanner.classList.add('show');
+                
+                // Auto-hide after 5 seconds
+                if (this.falsePositiveTimeout) {
+                    clearTimeout(this.falsePositiveTimeout);
+                }
+                
+                this.falsePositiveTimeout = setTimeout(() => {
+                    this.hideFalsePositiveBanner();
+                }, 5000);
+            }
+
+            hideFalsePositiveBanner() {
+                this.falsePositiveBanner.classList.remove('show');
+                if (this.falsePositiveTimeout) {
+                    clearTimeout(this.falsePositiveTimeout);
+                    this.falsePositiveTimeout = null;
+                }
+            }
+
+            undoLastDetection() {
+                if (!this.lastAutoDetection) return;
+                
+                const timeSinceDetection = Date.now() - this.lastAutoDetection.time;
+                if (timeSinceDetection > 10000) { // 10 seconds max
+                    alert('Rückgängig machen ist nur innerhalb von 10 Sekunden möglich.');
+                    return;
+                }
+                
+                // Reverse the last action
+                if (this.lastAutoDetection.action === 'hit') {
+                    this.totalActions--;
+                    this.hitCount--;
+                    if (this.currentMode === 'pass' || this.currentMode === 'combo') {
+                        this.passCount--;
+                        this.detailedStats.passByDirection[this.currentPassDirection].hits--;
+                    }
+                    if (this.currentMode === 'goal' || this.currentMode === 'combo') {
+                        this.goalCount--;
+                        this.detailedStats.goalsByPosition[this.currentGoalTarget].hits--;
+                    }
+                } else if (this.lastAutoDetection.action === 'miss') {
+                    this.totalActions--;
+                    this.missCount--;
+                    if (this.currentMode === 'pass' || this.currentMode === 'combo') {
+                        this.passCount--;
+                        this.detailedStats.passByDirection[this.currentPassDirection].misses--;
+                    }
+                    if (this.currentMode === 'goal' || this.currentMode === 'combo') {
+                        this.goalCount--;
+                        this.detailedStats.goalsByPosition[this.currentGoalTarget].misses--;
                     }
                 }
                 
-            } catch (error) {
-                addLog(`❌ Mikrofon Fehler: ${error.name}`);
-                addLog(`❌ Message: ${error.message}`);
-                addLog(`❌ Stack: ${error.stack}`);
+                this.updateStats();
+                this.lastAutoDetection = null;
+                this.hideFalsePositiveBanner();
                 
-                let solution = '';
-                switch(error.name) {
-                    case 'NotAllowedError':
-                        solution = '🎤 Mikrofon verweigert! Lösung: Adressleiste → 🎤 Symbol → "Erlauben"';
-                        break;
-                    case 'NotFoundError':
-                        solution = '🔍 Kein Mikrofon gefunden. iPad Hardware-Problem?';
-                        break;
-                    case 'NotSupportedError':
-                        solution = '❌ Safari unterstützt diese Mikrofon-Einstellungen nicht';
-                        break;
-                    case 'NotReadableError':
-                        solution = '🔒 Mikrofon wird bereits verwendet oder gesperrt';
-                        break;
-                    case 'OverconstrainedError':
-                        solution = '⚙️ Mikrofon-Constraints nicht kompatibel mit iPad';
-                        break;
-                    default:
-                        solution = '❓ Unbekannter Safari-Fehler. Seite neu laden versuchen?';
-                }
-                
-                updateStatus(solution, 'error');
-                document.getElementById('testBtn').disabled = false;
+                console.log('Last auto-detection undone');
+            }
+
+            animateNew() {
+                // Animate active arrow
+                this.arrows.forEach(arrow => {
+                    if (arrow.classList.contains('active')) {
+                        arrow.classList.remove('pulse');
+                        setTimeout(() => arrow.classList.add('pulse'), 10);
+                    }
+                });
+
+                // Animate target
+                this.targetNumberEl.classList.remove('pulse');
+                setTimeout(() => this.targetNumberEl.classList.add('pulse'), 10);
             }
         }
-        
-        function startAnalysis() {
-            if (!isActive || !analyser) return;
-            
-            // Frequenzdaten holen
-            analyser.getByteFrequencyData(dataArray);
-            
-            // Durchschnittslevel berechnen
-            let sum = 0;
-            for (let i = 0; i < dataArray.length; i++) {
-                sum += dataArray[i];
-            }
-            const average = sum / dataArray.length;
-            const level = Math.round((average / 255) * 100);
-            
-            // UI aktualisieren
-            document.getElementById('levelFill').style.width = level + '%';
-            document.getElementById('levelText').textContent = level + '%';
-            
-            // Bei hohem Level loggen
-            if (level > 50) {
-                addLog(`🔊 Hoher Pegel erkannt: ${level}%`);
-            }
-            
-            // Weiter analysieren
-            requestAnimationFrame(startAnalysis);
-        }
-        
-        // iOS Safari benötigt Interaction vor AudioContext
-        document.addEventListener('touchstart', function() {
-            addLog('Touch-Interaction erkannt - gut für iOS Safari');
-        }, { once: true });
-        
-        // Beim Laden iOS-spezifische Infos sammeln
-        window.addEventListener('load', function() {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-            
-            if (!isIOS || !isSafari) {
-                updateStatus('⚠️ Warnung: Du bist nicht auf iPad Safari. Diese App ist speziell dafür optimiert!', 'warning');
-            }
-            
-            addLog(`App geladen auf: ${navigator.userAgent}`);
+
+        // App starten
+        document.addEventListener('DOMContentLoaded', () => {
+            const trainer = new FoosballTrainer();
+            trainer.generateNext(); // Initial setup
         });
     </script>
 </body>
