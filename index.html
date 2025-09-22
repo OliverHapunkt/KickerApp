@@ -1169,6 +1169,23 @@
                 });
             }
 
+            startCalibration() {
+                this.calibrationSamples = [];
+                this.currentCalibrationStep = 1;
+                this.isCapturingShot = false;
+                this.maxLevelInWindow = 0;
+                this.calibrationModal.classList.add('active');
+                this.updateCalibrationStep(1);
+                
+                // Initialize audio for calibration
+                this.initializeAudio().then(() => {
+                    this.startCalibrationListening();
+                }).catch(error => {
+                    alert('Mikrofon konnte nicht aktiviert werden!');
+                    this.cancelCalibration();
+                });
+            }
+
             startCalibrationListening() {
                 if (!this.analyser) return;
                 
@@ -1182,6 +1199,11 @@
                 
                 this.calibrationLevelFill.style.width = levelPercent + '%';
                 
+                // Track the maximum level in current window
+                if (this.isCapturingShot) {
+                    this.maxLevelInWindow = Math.max(this.maxLevelInWindow, averageLevel);
+                }
+                
                 if (this.calibrationModal.classList.contains('active')) {
                     requestAnimationFrame(() => this.startCalibrationListening());
                 }
@@ -1190,16 +1212,46 @@
             confirmCalibrationShot() {
                 if (!this.analyser) return;
                 
-                // Capture current audio level
-                this.analyser.getByteFrequencyData(this.dataArray);
-                let sum = 0;
-                for (let i = 0; i < this.dataArray.length; i++) {
-                    sum += this.dataArray[i];
+                if (!this.isCapturingShot) {
+                    // Start capturing for 3 seconds
+                    this.isCapturingShot = true;
+                    this.maxLevelInWindow = 0;
+                    this.confirmShotBtn.textContent = '🎯 Schieße JETZT!';
+                    this.confirmShotBtn.style.background = 'linear-gradient(135deg, #FFC107, #FF9800)';
+                    this.stepDescription.textContent = 'JETZT TOR SCHIEßEN! (3 Sekunden Zeit)';
+                    
+                    // Auto-capture after 3 seconds
+                    setTimeout(() => {
+                        if (this.isCapturingShot) {
+                            this.captureCalibrationLevel();
+                        }
+                    }, 3000);
+                } else {
+                    // Manual capture
+                    this.captureCalibrationLevel();
                 }
-                const averageLevel = sum / this.dataArray.length;
+            }
+            
+            captureCalibrationLevel() {
+                if (!this.isCapturingShot) return;
                 
-                this.calibrationSamples.push(averageLevel);
-                console.log(`Calibration shot ${this.calibrationSamples.length}: ${averageLevel}`);
+                this.isCapturingShot = false;
+                
+                // Use the maximum level captured during the window
+                const capturedLevel = this.maxLevelInWindow;
+                
+                if (capturedLevel === 0) {
+                    alert('Kein Ton erkannt! Versuche es nochmal und schieße lauter.');
+                    this.resetCalibrationStep();
+                    return;
+                }
+                
+                this.calibrationSamples.push(capturedLevel);
+                console.log(`Calibration shot ${this.calibrationSamples.length}: ${capturedLevel} (max in window)`);
+                
+                // Reset button
+                this.confirmShotBtn.textContent = '✓ Tor Bestätigen';
+                this.confirmShotBtn.style.background = 'linear-gradient(135deg, #00c851, #007e33)';
                 
                 // Update progress
                 this.progressDots[this.calibrationSamples.length - 1].classList.remove('active');
@@ -1207,7 +1259,8 @@
                 
                 if (this.calibrationSamples.length < 3) {
                     // Next step
-                    this.updateCalibrationStep(this.calibrationSamples.length + 1);
+                    this.currentCalibrationStep = this.calibrationSamples.length + 1;
+                    this.updateCalibrationStep(this.currentCalibrationStep);
                     if (this.calibrationSamples.length < 3) {
                         this.progressDots[this.calibrationSamples.length].classList.add('active');
                     }
@@ -1216,6 +1269,14 @@
                     this.completeCalibration();
                 }
             }
+            
+            resetCalibrationStep() {
+                this.confirmShotBtn.textContent = '✓ Tor Bestätigen';
+                this.confirmShotBtn.style.background = 'linear-gradient(135deg, #00c851, #007e33)';
+                this.stepDescription.textContent = `Schieße jetzt Tor ${this.currentCalibrationStep} und drücke danach "Bestätigen"`;
+                this.isCapturingShot = false;
+                this.maxLevelInWindow = 0;
+            }
 
             updateCalibrationStep(step) {
                 this.stepTitle.textContent = `Schritt ${step} von 3`;
@@ -1223,23 +1284,35 @@
             }
 
             completeCalibration() {
+                if (this.calibrationSamples.length === 0) {
+                    alert('Keine Kalibrierung erfasst. Versuche es nochmal!');
+                    return;
+                }
+                
                 // Calculate threshold from samples
                 const maxLevel = Math.max(...this.calibrationSamples);
+                const minLevel = Math.min(...this.calibrationSamples);
                 const avgLevel = this.calibrationSamples.reduce((a, b) => a + b, 0) / this.calibrationSamples.length;
                 
-                // Set threshold slightly below average of samples
-                this.goalThreshold = avgLevel * 0.8;
-                this.baselineNoise = Math.min(...this.calibrationSamples) * 0.5;
+                // Set threshold to 70% of average (more sensitive)
+                this.goalThreshold = avgLevel * 0.7;
+                this.baselineNoise = minLevel * 0.5;
+                
+                // Ensure minimum threshold
+                if (this.goalThreshold < 20) {
+                    this.goalThreshold = 20;
+                }
                 
                 console.log('Calibration complete!');
                 console.log('Samples:', this.calibrationSamples);
+                console.log('Min/Max/Avg:', minLevel, maxLevel, avgLevel);
                 console.log('Threshold set to:', this.goalThreshold);
                 console.log('Baseline noise:', this.baselineNoise);
                 
                 this.isCalibrated = true;
                 this.cancelCalibration();
                 
-                alert(`Kalibrierung abgeschlossen! 🎯\n\nSchwellenwert: ${Math.round(this.goalThreshold)}\nAuto-Erkennung ist jetzt aktiv!`);
+                alert(`Kalibrierung abgeschlossen! 🎯\n\nMesswerte: ${this.calibrationSamples.map(s => Math.round(s)).join(', ')}\nSchwellenwert: ${Math.round(this.goalThreshold)}\nAuto-Erkennung ist jetzt aktiv!`);
                 
                 // Start listening after calibration
                 this.initializeAudio().then(() => {
@@ -1252,6 +1325,12 @@
             cancelCalibration() {
                 this.calibrationModal.classList.remove('active');
                 this.calibrationSamples = [];
+                this.isCapturingShot = false;
+                this.maxLevelInWindow = 0;
+                
+                // Reset button style
+                this.confirmShotBtn.textContent = '✓ Tor Bestätigen';
+                this.confirmShotBtn.style.background = 'linear-gradient(135deg, #00c851, #007e33)';
                 
                 // Reset progress dots
                 this.progressDots.forEach((dot, index) => {
