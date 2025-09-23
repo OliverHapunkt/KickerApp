@@ -25,7 +25,7 @@
 
         .header {
             text-align: center;
-            padding: 8px 20px;
+            padding: 10px 20px;
             background: linear-gradient(90deg, #00c851 0%, #007e33 100%);
             box-shadow: 0 2px 10px rgba(0, 200, 81, 0.3);
         }
@@ -39,9 +39,11 @@
         .game-controls {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            padding: 8px 20px;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 20px;
             background: rgba(0, 0, 0, 0.2);
+            flex-wrap: wrap;
         }
 
         .control-btn {
@@ -74,32 +76,41 @@
             box-shadow: 0 3px 10px rgba(255, 107, 107, 0.4);
         }
 
+        #gameStatus {
+            color: #00c851;
+            font-weight: bold;
+            padding: 8px 16px;
+            background: rgba(0, 200, 81, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 200, 81, 0.3);
+        }
+
         .main-container {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 10px;
-            gap: 20px;
+            padding: 20px;
+            gap: 30px;
             min-height: 0;
         }
 
         .training-area {
             display: flex;
-            gap: 30px;
+            gap: 40px;
             align-items: center;
             justify-content: center;
             width: 100%;
             height: 100%;
         }
 
-        /* PASS SECTION - Toggle-bar */
+        /* PASS SECTION */
         .pass-section {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-width: 300px;
+            min-width: 250px;
             height: 100%;
             transition: all 0.5s ease;
         }
@@ -115,26 +126,26 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
             background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
-            border-radius: 30px;
+            border-radius: 25px;
             padding: 30px;
             border: 3px solid #444;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .pass-title {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             color: #00c851;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .pass-visualization {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
         }
 
         .pass-arrow {
@@ -145,44 +156,45 @@
         }
 
         .pass-arrow.up {
-            border-left: 40px solid transparent;
-            border-right: 40px solid transparent;
-            border-bottom: 60px solid #4FC3F7;
+            border-left: 35px solid transparent;
+            border-right: 35px solid transparent;
+            border-bottom: 50px solid #4FC3F7;
         }
 
         .pass-arrow.up.active {
             opacity: 1;
             border-bottom-color: #2196F3;
-            filter: drop-shadow(0 0 20px rgba(33, 150, 243, 0.8));
-            transform: scale(1.2);
+            filter: drop-shadow(0 0 15px rgba(33, 150, 243, 0.8));
+            transform: scale(1.1);
         }
 
         .pass-center {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            font-size: 1.2rem;
         }
 
         .pass-arrow.down {
-            border-left: 40px solid transparent;
-            border-right: 40px solid transparent;
-            border-top: 60px solid #F44336;
+            border-left: 35px solid transparent;
+            border-right: 35px solid transparent;
+            border-top: 50px solid #F44336;
         }
 
         .pass-arrow.down.active {
             opacity: 1;
             border-top-color: #D32F2F;
-            filter: drop-shadow(0 0 20px rgba(211, 47, 47, 0.8));
-            transform: scale(1.2);
+            filter: drop-shadow(0 0 15px rgba(211, 47, 47, 0.8));
+            transform: scale(1.1);
         }
 
-        /* GOAL SECTION */
+        /* GOAL SECTION - Streamlined */
         .goal-section {
             flex: 1;
             display: flex;
@@ -193,62 +205,120 @@
             height: 100%;
         }
 
-        .goal-display {
+        .goal-container {
             background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
-            border-radius: 30px;
+            border-radius: 25px;
             padding: 30px;
             border: 3px solid #444;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             text-align: center;
             width: 100%;
+            position: relative;
         }
 
-        .goal-title {
-            font-size: 1.5rem;
-            color: #00c851;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-
+        /* Stylized Goal Frame */
         .goal-frame {
             background: linear-gradient(145deg, #333, #222);
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 15px;
+            padding: 20px 15px 15px 15px;
             box-shadow: 
                 inset 0 4px 8px rgba(0,0,0,0.3),
                 0 4px 15px rgba(0,0,0,0.4);
             border: 3px solid #555;
             margin-bottom: 20px;
+            position: relative;
+        }
+
+        /* Goal Posts */
+        .goal-frame::before,
+        .goal-frame::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            width: 8px;
+            height: calc(100% + 10px);
+            background: linear-gradient(180deg, #888, #555);
+            border-radius: 4px;
+            box-shadow: inset 2px 0 3px rgba(0,0,0,0.3);
+        }
+
+        .goal-frame::before {
+            left: -5px;
+        }
+
+        .goal-frame::after {
+            right: -5px;
+        }
+
+        /* Goal Net Effect */
+        .goal-frame::before {
+            background-image: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255,255,255,0.1) 10px,
+                    rgba(255,255,255,0.1) 12px
+                );
         }
 
         .goal-visualization {
             display: flex;
             justify-content: center;
-            gap: 8px;
-            margin: 20px 0;
+            gap: 5px;
+            margin: 10px 0 20px 0;
+            position: relative;
         }
 
         .goal-segment {
-            width: 80px;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.1);
+            width: 85px;
+            height: 140px;
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(5px);
             border: 3px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             font-size: 2.5rem;
             font-weight: 900;
             transition: all 0.4s ease;
             cursor: pointer;
+            position: relative;
+        }
+
+        /* Stats above each segment */
+        .segment-stats {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 3px 6px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            white-space: nowrap;
+            border: 1px solid #444;
+            z-index: 10;
+        }
+
+        .segment-percentage {
+            color: #00c851;
+            font-weight: 700;
+        }
+
+        .segment-fraction {
+            color: #999;
+            font-size: 0.6rem;
         }
 
         .goal-segment.active {
             background: linear-gradient(135deg, #00c851, #007e33);
             border-color: #00c851;
-            box-shadow: 0 0 30px rgba(0, 200, 81, 0.8);
-            transform: scale(1.2);
+            box-shadow: 0 0 25px rgba(0, 200, 81, 0.8);
+            transform: scale(1.15);
             color: white;
             animation: pulse 2s infinite;
         }
@@ -257,8 +327,8 @@
             animation: celebrate 0.8s ease;
             background: linear-gradient(135deg, #4CAF50, #2E7D32) !important;
             border-color: #4CAF50 !important;
-            box-shadow: 0 0 40px rgba(76, 175, 80, 1) !important;
-            transform: scale(1.3) !important;
+            box-shadow: 0 0 35px rgba(76, 175, 80, 1) !important;
+            transform: scale(1.25) !important;
         }
 
         .goal-segment.incorrect {
@@ -268,18 +338,9 @@
             box-shadow: 0 0 20px rgba(255, 152, 0, 0.8) !important;
         }
 
-        .target-number {
-            font-size: 6rem;
-            font-weight: 900;
-            color: #00c851;
-            text-shadow: 3px 3px 15px rgba(0, 200, 81, 0.8);
-            margin: 20px 0;
-            animation: pulse 2s infinite;
-        }
-
         .miss-button {
             width: 100%;
-            max-width: 500px;
+            max-width: 400px;
             padding: 20px 40px;
             font-size: 2rem;
             font-weight: 900;
@@ -288,7 +349,7 @@
             border: none;
             border-radius: 20px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 15px;
             transition: all 0.3s ease;
             box-shadow: 0 8px 25px rgba(244, 67, 54, 0.5);
         }
@@ -313,7 +374,7 @@
         }
 
         .mini-stat {
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(10px);
             border-radius: 8px;
             padding: 5px 10px;
@@ -337,12 +398,12 @@
         /* PASS TOGGLE */
         .pass-toggle {
             position: fixed;
-            bottom: 10px;
-            left: 10px;
+            bottom: 15px;
+            left: 15px;
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(10px);
             padding: 8px 12px;
             border-radius: 20px;
@@ -384,39 +445,6 @@
         .toggle-label {
             font-size: 0.8rem;
             color: #999;
-        }
-
-        /* ANIMATIONS */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes celebrate {
-            0% { transform: scale(1.2); }
-            25% { transform: scale(1.4) rotate(5deg); }
-            50% { transform: scale(1.3) rotate(-3deg); }
-            75% { transform: scale(1.35) rotate(2deg); }
-            100% { transform: scale(1.2) rotate(0deg); }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px) rotate(-3deg); }
-            75% { transform: translateX(8px) rotate(3deg); }
-        }
-
-        @keyframes missAnimation {
-            0% { transform: scale(1); }
-            25% { transform: scale(0.95) rotate(-1deg); }
-            50% { transform: scale(0.9); }
-            75% { transform: scale(0.95) rotate(1deg); }
-            100% { transform: scale(1); }
-        }
-
-        .hidden {
-            display: none !important;
         }
 
         /* GAME MODAL */
@@ -507,6 +535,39 @@
             outline: none;
         }
 
+        /* ANIMATIONS */
+        @keyframes pulse {
+            0% { transform: scale(1.15); }
+            50% { transform: scale(1.25); }
+            100% { transform: scale(1.15); }
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1.25); }
+            25% { transform: scale(1.4) rotate(5deg); }
+            50% { transform: scale(1.3) rotate(-3deg); }
+            75% { transform: scale(1.35) rotate(2deg); }
+            100% { transform: scale(1.25) rotate(0deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px) rotate(-3deg); }
+            75% { transform: translateX(8px) rotate(3deg); }
+        }
+
+        @keyframes missAnimation {
+            0% { transform: scale(1); }
+            25% { transform: scale(0.95) rotate(-1deg); }
+            50% { transform: scale(0.9); }
+            75% { transform: scale(0.95) rotate(1deg); }
+            100% { transform: scale(1); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
         /* MOBILE LANDSCAPE OPTIMIZATIONS */
         @media (max-height: 600px) {
             .header {
@@ -522,22 +583,18 @@
             }
             
             .main-container {
-                padding: 5px;
-                gap: 15px;
+                padding: 10px;
+                gap: 20px;
             }
             
             .pass-direction-display,
-            .goal-display {
+            .goal-container {
                 padding: 20px;
             }
             
-            .target-number {
-                font-size: 4rem;
-            }
-            
             .goal-segment {
-                width: 60px;
-                height: 90px;
+                width: 65px;
+                height: 100px;
                 font-size: 2rem;
             }
             
@@ -569,7 +626,7 @@
                 <div class="game-mode" data-mode="perfection">
                     <div class="mode-title">⭐ Perfektion</div>
                     <input type="number" class="mode-input" id="perfectionGoal" value="3" min="2" max="10">
-                    <div>x jedes Segment</div>
+                    <div>x jedes Segment NACHEINANDER</div>
                 </div>
                 
                 <div class="game-mode" data-mode="streak">
@@ -591,11 +648,11 @@
     </div>
 
     <div class="game-controls">
-        <button class="control-btn" onclick="trainer.showGameModal()">🎮 Neues Spiel</button>
-        <button class="control-btn" onclick="trainer.showAnalysis()">📊 Auswertung</button>
-        <div id="gameStatus" style="color: #00c851; font-weight: bold; padding: 8px 16px;">
+        <button class="control-btn primary" onclick="trainer.showGameModal()">🎮 Neues Spiel</button>
+        <div id="gameStatus" style="flex-grow: 1; text-align: center;">
             Freies Training aktiv
         </div>
+        <button class="control-btn" onclick="trainer.showAnalysis()">📊 Auswertung</button>
     </div>
 
     <!-- Compact Stats in Corner -->
@@ -634,20 +691,48 @@
                 </div>
             </div>
 
-            <!-- Goal Section -->
+            <!-- Goal Section - Streamlined -->
             <div class="goal-section">
-                <div class="goal-display">
-                    <div class="goal-title">SCHUSS ZIEL</div>
+                <div class="goal-container">
                     <div class="goal-frame">
                         <div class="goal-visualization">
-                            <div class="goal-segment" data-position="1" onclick="trainer.hitSegment(1)">1</div>
-                            <div class="goal-segment" data-position="2" onclick="trainer.hitSegment(2)">2</div>
-                            <div class="goal-segment active" data-position="3" onclick="trainer.hitSegment(3)">3</div>
-                            <div class="goal-segment" data-position="4" onclick="trainer.hitSegment(4)">4</div>
-                            <div class="goal-segment" data-position="5" onclick="trainer.hitSegment(5)">5</div>
+                            <div class="goal-segment" data-position="1" onclick="trainer.hitSegment(1)">
+                                <div class="segment-stats">
+                                    <div class="segment-percentage" id="seg1-percent">0%</div>
+                                    <div class="segment-fraction" id="seg1-fraction">0/0</div>
+                                </div>
+                                1
+                            </div>
+                            <div class="goal-segment" data-position="2" onclick="trainer.hitSegment(2)">
+                                <div class="segment-stats">
+                                    <div class="segment-percentage" id="seg2-percent">0%</div>
+                                    <div class="segment-fraction" id="seg2-fraction">0/0</div>
+                                </div>
+                                2
+                            </div>
+                            <div class="goal-segment active" data-position="3" onclick="trainer.hitSegment(3)">
+                                <div class="segment-stats">
+                                    <div class="segment-percentage" id="seg3-percent">0%</div>
+                                    <div class="segment-fraction" id="seg3-fraction">0/0</div>
+                                </div>
+                                3
+                            </div>
+                            <div class="goal-segment" data-position="4" onclick="trainer.hitSegment(4)">
+                                <div class="segment-stats">
+                                    <div class="segment-percentage" id="seg4-percent">0%</div>
+                                    <div class="segment-fraction" id="seg4-fraction">0/0</div>
+                                </div>
+                                4
+                            </div>
+                            <div class="goal-segment" data-position="5" onclick="trainer.hitSegment(5)">
+                                <div class="segment-stats">
+                                    <div class="segment-percentage" id="seg5-percent">0%</div>
+                                    <div class="segment-fraction" id="seg5-fraction">0/0</div>
+                                </div>
+                                5
+                            </div>
                         </div>
                     </div>
-                    <div class="target-number" id="targetNumber">3</div>
                     <button class="miss-button" id="missButton" onclick="trainer.registerMiss()">❌ MISS</button>
                 </div>
             </div>
@@ -671,6 +756,13 @@
                     streakGoal: 5
                 };
                 
+                // Perfection Mode specific
+                this.perfectionState = {
+                    currentSegment: 1,
+                    consecutiveHits: 0,
+                    completedSegments: new Set()
+                };
+                
                 // Current Game Statistics (reset each new game)
                 this.currentGame = {
                     hits: 0,
@@ -678,12 +770,12 @@
                     total: 0,
                     streakCurrent: 0,
                     streakBest: 0,
-                    segmentProgress: {
-                        1: { hits: 0, needed: 0, completed: false },
-                        2: { hits: 0, needed: 0, completed: false },
-                        3: { hits: 0, needed: 0, completed: false },
-                        4: { hits: 0, needed: 0, completed: false },
-                        5: { hits: 0, needed: 0, completed: false }
+                    segmentStats: {
+                        1: { hits: 0, attempts: 0 },
+                        2: { hits: 0, attempts: 0 },
+                        3: { hits: 0, attempts: 0 },
+                        4: { hits: 0, attempts: 0 },
+                        5: { hits: 0, attempts: 0 }
                     },
                     startTime: null
                 };
@@ -703,7 +795,6 @@
                 this.passToggle = document.getElementById('passToggle');
                 this.passArrows = document.querySelectorAll('.pass-arrow');
                 this.goalSegments = document.querySelectorAll('.goal-segment');
-                this.targetNumberEl = document.getElementById('targetNumber');
                 this.missButton = document.getElementById('missButton');
                 
                 this.hitCountEl = document.getElementById('hitCount');
@@ -763,14 +854,21 @@
                     total: 0,
                     streakCurrent: 0,
                     streakBest: 0,
-                    segmentProgress: {
-                        1: { hits: 0, needed: this.gameSettings.perfectionGoal, completed: false },
-                        2: { hits: 0, needed: this.gameSettings.perfectionGoal, completed: false },
-                        3: { hits: 0, needed: this.gameSettings.perfectionGoal, completed: false },
-                        4: { hits: 0, needed: this.gameSettings.perfectionGoal, completed: false },
-                        5: { hits: 0, needed: this.gameSettings.perfectionGoal, completed: false }
+                    segmentStats: {
+                        1: { hits: 0, attempts: 0 },
+                        2: { hits: 0, attempts: 0 },
+                        3: { hits: 0, attempts: 0 },
+                        4: { hits: 0, attempts: 0 },
+                        5: { hits: 0, attempts: 0 }
                     },
                     startTime: Date.now()
+                };
+                
+                // Reset perfection state
+                this.perfectionState = {
+                    currentSegment: Math.floor(Math.random() * 5) + 1,
+                    consecutiveHits: 0,
+                    completedSegments: new Set()
                 };
             }
 
@@ -794,8 +892,7 @@
                         statusText = `Ziel: ${this.currentGame.hits}/${this.gameSettings.targetGoal} Treffer`;
                         break;
                     case 'perfection':
-                        const completed = Object.values(this.currentGame.segmentProgress).filter(s => s.completed).length;
-                        statusText = `Perfektion: ${completed}/5 Segmente abgeschlossen`;
+                        statusText = `Perfektion: Segment ${this.perfectionState.currentSegment} - ${this.perfectionState.consecutiveHits}/${this.gameSettings.perfectionGoal} (${this.perfectionState.completedSegments.size}/5 fertig)`;
                         break;
                     case 'streak':
                         statusText = `Serie: ${this.currentGame.streakCurrent} (Ziel: ${this.gameSettings.streakGoal})`;
@@ -818,13 +915,19 @@
 
             // GAME LOGIC
             generateNext() {
-                // Generate new goal target
-                this.currentTarget = Math.floor(Math.random() * 5) + 1;
-                
                 // Generate pass direction if enabled
                 if (this.passEnabled) {
                     this.currentPassDirection = Math.random() > 0.5 ? 'up' : 'down';
                     this.updatePassDisplay();
+                }
+                
+                // Set target based on game mode
+                if (this.currentMode === 'perfection') {
+                    // In perfection mode, keep the same segment until required hits achieved
+                    this.currentTarget = this.perfectionState.currentSegment;
+                } else {
+                    // In other modes, generate random target
+                    this.currentTarget = Math.floor(Math.random() * 5) + 1;
                 }
                 
                 this.updateGoalDisplay();
@@ -846,9 +949,6 @@
                 // Highlight target segment
                 const targetSegment = document.querySelector(`[data-position="${this.currentTarget}"]`);
                 targetSegment.classList.add('active');
-                
-                // Update target number
-                this.targetNumberEl.textContent = this.currentTarget;
             }
 
             // HIT DETECTION
@@ -857,6 +957,7 @@
                 
                 const targetSegment = document.querySelector(`[data-position="${segmentNumber}"]`);
                 this.currentGame.total++;
+                this.currentGame.segmentStats[this.currentTarget].attempts++;
                 this.totalStats.totalShots++;
                 
                 if (segmentNumber === this.currentTarget) {
@@ -879,6 +980,7 @@
                 // Update stats
                 this.currentGame.hits++;
                 this.currentGame.streakCurrent++;
+                this.currentGame.segmentStats[segmentNumber].hits++;
                 this.totalStats.totalHits++;
                 
                 if (this.currentGame.streakCurrent > this.currentGame.streakBest) {
@@ -908,9 +1010,8 @@
                 
                 // Mode-specific penalty
                 if (this.currentMode === 'perfection') {
-                    // Reset progress for current target segment
-                    this.currentGame.segmentProgress[this.currentTarget].hits = 0;
-                    this.currentGame.segmentProgress[this.currentTarget].completed = false;
+                    // Reset consecutive hits for current segment
+                    this.perfectionState.consecutiveHits = 0;
                 }
                 
                 // Remove animation after delay
@@ -934,13 +1035,13 @@
                 this.currentGame.total++;
                 this.currentGame.misses++;
                 this.currentGame.streakCurrent = 0; // Break streak
+                this.currentGame.segmentStats[this.currentTarget].attempts++;
                 this.totalStats.totalShots++;
                 
                 // Mode-specific penalty
                 if (this.currentMode === 'perfection') {
-                    // Reset progress for current target segment
-                    this.currentGame.segmentProgress[this.currentTarget].hits = 0;
-                    this.currentGame.segmentProgress[this.currentTarget].completed = false;
+                    // Reset consecutive hits for current segment
+                    this.perfectionState.consecutiveHits = 0;
                 }
                 
                 this.updateDisplay();
@@ -953,9 +1054,21 @@
             handleModeSpecificHit(segmentNumber) {
                 switch(this.currentMode) {
                     case 'perfection':
-                        this.currentGame.segmentProgress[segmentNumber].hits++;
-                        if (this.currentGame.segmentProgress[segmentNumber].hits >= this.gameSettings.perfectionGoal) {
-                            this.currentGame.segmentProgress[segmentNumber].completed = true;
+                        this.perfectionState.consecutiveHits++;
+                        
+                        // Check if this segment is completed
+                        if (this.perfectionState.consecutiveHits >= this.gameSettings.perfectionGoal) {
+                            this.perfectionState.completedSegments.add(segmentNumber);
+                            this.perfectionState.consecutiveHits = 0;
+                            
+                            // Find next uncompleted segment
+                            const remainingSegments = [1,2,3,4,5].filter(s => 
+                                !this.perfectionState.completedSegments.has(s));
+                            
+                            if (remainingSegments.length > 0) {
+                                this.perfectionState.currentSegment = 
+                                    remainingSegments[Math.floor(Math.random() * remainingSegments.length)];
+                            }
                         }
                         break;
                     // Other modes don't need special handling for hits
@@ -976,10 +1089,9 @@
                         break;
                         
                     case 'perfection':
-                        const completedSegments = Object.values(this.currentGame.segmentProgress).filter(s => s.completed).length;
-                        if (completedSegments >= 5) {
+                        if (this.perfectionState.completedSegments.size >= 5) {
                             completed = true;
-                            completionMessage = `🌟 Perfekt!\n\nAlle 5 Segmente jeweils ${this.gameSettings.perfectionGoal}x getroffen!`;
+                            completionMessage = `🌟 Perfekt!\n\nAlle 5 Segmente jeweils ${this.gameSettings.perfectionGoal}x nacheinander getroffen!`;
                         }
                         break;
                         
@@ -1008,6 +1120,16 @@
                 const currentHitRate = this.currentGame.total > 0 ? 
                     Math.round((this.currentGame.hits / this.currentGame.total) * 100) : 0;
                 this.hitRateEl.textContent = currentHitRate + '%';
+                
+                // Update segment statistics
+                for (let i = 1; i <= 5; i++) {
+                    const stats = this.currentGame.segmentStats[i];
+                    const percentage = stats.attempts > 0 ? 
+                        Math.round((stats.hits / stats.attempts) * 100) : 0;
+                    
+                    document.getElementById(`seg${i}-percent`).textContent = percentage + '%';
+                    document.getElementById(`seg${i}-fraction`).textContent = `${stats.hits}/${stats.attempts}`;
+                }
             }
 
             showAnalysis() {
@@ -1028,15 +1150,21 @@
                 analysis += `🏆 Gesamt-Statistiken:\n`;
                 analysis += `• Treffer gesamt: ${this.totalStats.totalHits}\n`;
                 analysis += `• Schüsse gesamt: ${this.totalStats.totalShots}\n`;
-                analysis += `• Gesamt-Quote: ${totalHitRate}%\n`;
+                analysis += `• Gesamt-Quote: ${totalHitRate}%\n\n`;
+                
+                analysis += `🎯 Segment-Auswertung (aktuelles Spiel):\n`;
+                for (let i = 1; i <= 5; i++) {
+                    const stats = this.currentGame.segmentStats[i];
+                    const percentage = stats.attempts > 0 ? 
+                        Math.round((stats.hits / stats.attempts) * 100) : 0;
+                    analysis += `• Segment ${i}: ${stats.hits}/${stats.attempts} (${percentage}%)\n`;
+                }
                 
                 if (this.currentMode === 'perfection') {
                     analysis += `\n⭐ Perfektion-Fortschritt:\n`;
-                    for (let i = 1; i <= 5; i++) {
-                        const prog = this.currentGame.segmentProgress[i];
-                        const status = prog.completed ? '✅' : '🔄';
-                        analysis += `• Segment ${i}: ${prog.hits}/${this.gameSettings.perfectionGoal} ${status}\n`;
-                    }
+                    analysis += `• Aktuelles Segment: ${this.perfectionState.currentSegment}\n`;
+                    analysis += `• Consecutive Hits: ${this.perfectionState.consecutiveHits}/${this.gameSettings.perfectionGoal}\n`;
+                    analysis += `• Abgeschlossene Segmente: ${Array.from(this.perfectionState.completedSegments).join(', ')}\n`;
                 }
                 
                 alert(analysis);
