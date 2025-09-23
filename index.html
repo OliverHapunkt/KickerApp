@@ -788,6 +788,9 @@
                 this.analysisModal = document.getElementById('analysisModal');
                 this.closeAnalysisBtn = document.getElementById('closeAnalysisBtn');
                 this.resetStatsBtn = document.getElementById('resetStatsBtn');
+                
+                // Debug: Check if analysis button exists
+                console.log('Analysis button found:', !!this.analysisBtn);
             }
 
             bindEvents() {
@@ -803,7 +806,11 @@
                 this.missBtn.addEventListener('click', () => this.registerMiss());
                 this.resetBtn.addEventListener('click', () => this.resetStats());
                 this.soundToggle.addEventListener('click', () => this.toggleSoundDetection());
-                this.analysisBtn.addEventListener('click', () => this.showAnalysis());
+                
+                // Analysis button
+                if (this.analysisBtn) {
+                    this.analysisBtn.addEventListener('click', () => this.showAnalysis());
+                }
                 
                 // Modal controls
                 this.confirmShotBtn.addEventListener('click', () => this.confirmCalibrationShot());
@@ -813,8 +820,12 @@
                 this.undoBtn.addEventListener('click', () => this.undoLastDetection());
                 
                 // Analysis modal
-                this.closeAnalysisBtn.addEventListener('click', () => this.closeAnalysis());
-                this.resetStatsBtn.addEventListener('click', () => this.confirmResetStats());
+                if (this.closeAnalysisBtn) {
+                    this.closeAnalysisBtn.addEventListener('click', () => this.closeAnalysis());
+                }
+                if (this.resetStatsBtn) {
+                    this.resetStatsBtn.addEventListener('click', () => this.confirmResetStats());
+                }
             }
 
             setMode(mode) {
@@ -1256,8 +1267,14 @@
 
             // ANALYSIS SYSTEM
             showAnalysis() {
+                console.log('showAnalysis called'); // Debug
                 this.updateAnalysisData();
-                this.analysisModal.classList.add('active');
+                if (this.analysisModal) {
+                    this.analysisModal.classList.add('active');
+                    console.log('Analysis modal opened'); // Debug
+                } else {
+                    console.error('Analysis modal not found');
+                }
             }
 
             closeAnalysis() {
