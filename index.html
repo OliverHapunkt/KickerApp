@@ -83,6 +83,102 @@
             text-transform: uppercase;
         }
 
+        /* Audio Detection Indicator */
+        .audio-indicator {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .audio-indicator.active {
+            opacity: 1;
+        }
+
+        .audio-indicator.listening {
+            background: rgba(0, 200, 81, 0.2);
+            border: 1px solid var(--primary);
+        }
+
+        .audio-indicator.detected {
+            animation: audioDetected 0.5s ease;
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        @keyframes audioDetected {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+
+        .audio-level {
+            width: 100px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .audio-level-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0;
+            transition: width 0.1s ease;
+        }
+
+        /* Correction Timer */
+        .correction-timer {
+            position: fixed;
+            top: calc(var(--header-height) + 20px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 10px;
+            border: 1px solid var(--warning);
+            display: none;
+            z-index: 200;
+        }
+
+        .correction-timer.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        .correction-timer-text {
+            color: var(--warning);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .correction-timer-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .correction-timer-fill {
+            height: 100%;
+            background: var(--warning);
+            transition: width 0.1s linear;
+        }
+
         /* Main Game Area */
         .game-container {
             flex: 1;
@@ -349,6 +445,37 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
+        .btn-audio {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-audio.active {
+            background: rgba(0, 200, 81, 0.2);
+            border-color: var(--primary);
+        }
+
+        .audio-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+        }
+
+        .btn-audio.active .audio-status {
+            background: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         /* Pass Toggle */
         .pass-toggle {
             display: flex;
@@ -452,6 +579,46 @@
             background: rgba(0, 200, 81, 0.2);
         }
 
+        /* Calibration Modal */
+        .calibration-modal {
+            text-align: center;
+        }
+
+        .calibration-step {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .calibration-instruction {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        .calibration-progress {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .calibration-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .calibration-dot.completed {
+            background: var(--primary);
+        }
+
+        .calibration-dot.active {
+            background: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .pass-section {
@@ -490,43 +657,12 @@
             }
         }
 
-        /* Landscape optimization */
-        @media (orientation: landscape) and (max-height: 600px) {
-            .goal-visualizer {
-                aspect-ratio: 3/1;
-            }
-        }
-
-        /* Touch feedback */
-        @media (hover: none) {
-            .goal-segment:active {
-                transform: scale(0.95);
-            }
-            
-            .btn:active {
-                transform: scale(0.95);
-            }
-        }
-
-        /* Performance optimization */
-        .will-change-transform {
-            will-change: transform;
-        }
-
-        /* Accessibility */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation: none !important;
-                transition: none !important;
-            }
-        }
-
         /* Stats overlay */
         .stats-overlay {
             position: fixed;
             top: var(--header-height);
-            right: -300px;
-            width: 300px;
+            right: -400px;
+            width: 400px;
             height: calc(100vh - var(--header-height));
             background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(10px);
@@ -557,6 +693,37 @@
             justify-content: center;
         }
 
+        .stats-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-tab {
+            padding: 10px 15px;
+            background: transparent;
+            color: var(--text-dim);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .stats-tab.active {
+            color: var(--primary);
+        }
+
+        .stats-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+
         .segment-detail {
             margin-bottom: 20px;
             padding: 15px;
@@ -567,6 +734,9 @@
         .segment-detail h3 {
             color: var(--primary);
             margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .progress-bar {
@@ -583,9 +753,38 @@
             border-radius: 4px;
             transition: width 0.3s ease;
         }
+
+        .session-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .session-date {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
+    <!-- Audio Detection Indicator -->
+    <div class="audio-indicator" id="audioIndicator">
+        <span>🎤</span>
+        <div class="audio-level">
+            <div class="audio-level-bar" id="audioLevelBar"></div>
+        </div>
+    </div>
+
+    <!-- Correction Timer -->
+    <div class="correction-timer" id="correctionTimer">
+        <div class="correction-timer-text">Korrektur möglich - tippe das richtige Segment</div>
+        <div class="correction-timer-bar">
+            <div class="correction-timer-fill" id="correctionTimerFill"></div>
+        </div>
+    </div>
+
     <!-- Header -->
     <div class="header">
         <h1>⚽ Tischkicker Pro</h1>
@@ -600,7 +799,7 @@
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="score">0</div>
-                <div class="stat-label">Punkte</div>
+                <div class="stat-label">Session</div>
             </div>
         </div>
     </div>
@@ -648,6 +847,10 @@
     <div class="control-panel">
         <button class="btn btn-new-game" onclick="showGameModal()">Neues Spiel</button>
         <button class="btn btn-miss" onclick="registerMiss()">Verfehlt</button>
+        <button class="btn btn-audio" id="audioBtn" onclick="toggleAudioDetection()">
+            <span class="audio-status"></span>
+            <span>Audio</span>
+        </button>
         <button class="btn btn-stats" onclick="toggleStats()">Statistik</button>
         <div class="pass-toggle">
             <span>Pass</span>
@@ -667,7 +870,7 @@
                 <div class="game-mode" data-mode="target">
                     <h3>🎯 Zielmodus</h3>
                     <p>Erreiche eine bestimmte Anzahl Treffer</p>
-                    <select id="targetCount">
+                    <select id="targetCount" onclick="event.stopPropagation()">
                         <option value="10">10 Treffer</option>
                         <option value="25">25 Treffer</option>
                         <option value="50">50 Treffer</option>
@@ -676,10 +879,10 @@
                 <div class="game-mode" data-mode="perfection">
                     <h3>⭐ Perfektion</h3>
                     <p>Treffe jedes Segment konsekutiv</p>
-                    <select id="perfectionCount">
-                        <option value="2">2x pro Segment</option>
-                        <option value="3">3x pro Segment</option>
-                        <option value="5">5x pro Segment</option>
+                    <select id="perfectionCount" onclick="event.stopPropagation()">
+                        <option value="2">2x nacheinander</option>
+                        <option value="3">3x nacheinander</option>
+                        <option value="5">5x nacheinander</option>
                     </select>
                 </div>
             </div>
@@ -690,54 +893,48 @@
         </div>
     </div>
 
+    <!-- Audio Calibration Modal -->
+    <div class="modal" id="calibrationModal">
+        <div class="modal-content calibration-modal">
+            <h2>🎤 Audio-Kalibrierung</h2>
+            <div class="calibration-step">
+                <div class="calibration-instruction" id="calibrationInstruction">
+                    Schieße jetzt ein Tor!
+                </div>
+                <button class="btn btn-new-game" id="calibrationConfirm" onclick="confirmCalibrationShot()">
+                    Tor geschossen ✓
+                </button>
+            </div>
+            <div class="calibration-progress">
+                <div class="calibration-dot" id="cal1"></div>
+                <div class="calibration-dot" id="cal2"></div>
+                <div class="calibration-dot" id="cal3"></div>
+            </div>
+            <button class="btn btn-stats" onclick="cancelCalibration()">Abbrechen</button>
+        </div>
+    </div>
+
     <!-- Stats Overlay -->
     <div class="stats-overlay" id="statsOverlay">
         <button class="stats-close" onclick="toggleStats()">✕</button>
-        <h2 style="color: var(--primary); margin-bottom: 20px;">Detaillierte Statistik</h2>
+        <h2 style="color: var(--primary); margin-bottom: 20px;">Statistiken</h2>
         
-        <div class="segment-detail">
-            <h3>Segment 1</h3>
-            <div>Treffer: <span id="seg1-hits">0</span> / <span id="seg1-total">0</span></div>
-            <div>Quote: <span id="seg1-rate">0%</span></div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="seg1-progress" style="width: 0%"></div>
-            </div>
+        <div class="stats-tabs">
+            <button class="stats-tab active" onclick="showStatsTab('current')">Aktuelle Session</button>
+            <button class="stats-tab" onclick="showStatsTab('history')">Verlauf</button>
+            <button class="stats-tab" onclick="showStatsTab('trends')">Trends</button>
         </div>
         
-        <div class="segment-detail">
-            <h3>Segment 2</h3>
-            <div>Treffer: <span id="seg2-hits">0</span> / <span id="seg2-total">0</span></div>
-            <div>Quote: <span id="seg2-rate">0%</span></div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="seg2-progress" style="width: 0%"></div>
-            </div>
+        <div id="currentStats" class="stats-content">
+            <!-- Current session stats will be populated here -->
         </div>
         
-        <div class="segment-detail">
-            <h3>Segment 3</h3>
-            <div>Treffer: <span id="seg3-hits">0</span> / <span id="seg3-total">0</span></div>
-            <div>Quote: <span id="seg3-rate">0%</span></div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="seg3-progress" style="width: 0%"></div>
-            </div>
+        <div id="historyStats" class="stats-content" style="display: none;">
+            <!-- History will be populated here -->
         </div>
         
-        <div class="segment-detail">
-            <h3>Segment 4</h3>
-            <div>Treffer: <span id="seg4-hits">0</span> / <span id="seg4-total">0</span></div>
-            <div>Quote: <span id="seg4-rate">0%</span></div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="seg4-progress" style="width: 0%"></div>
-            </div>
-        </div>
-        
-        <div class="segment-detail">
-            <h3>Segment 5</h3>
-            <div>Treffer: <span id="seg5-hits">0</span> / <span id="seg5-total">0</span></div>
-            <div>Quote: <span id="seg5-rate">0%</span></div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="seg5-progress" style="width: 0%"></div>
-            </div>
+        <div id="trendsStats" class="stats-content" style="display: none;">
+            <!-- Trends will be populated here -->
         </div>
         
         <div style="margin-top: 30px;">
@@ -755,32 +952,107 @@
             score: 0,
             streak: 0,
             maxStreak: 0,
-            hits: 0,
-            misses: 0,
-            total: 0,
-            segmentStats: {
-                1: { hits: 0, attempts: 0 },
-                2: { hits: 0, attempts: 0 },
-                3: { hits: 0, attempts: 0 },
-                4: { hits: 0, attempts: 0 },
-                5: { hits: 0, attempts: 0 }
+            
+            // Current Session Stats (reset each new game)
+            currentSession: {
+                startTime: Date.now(),
+                mode: 'free',
+                hits: 0,
+                misses: 0,
+                total: 0,
+                segmentStats: {
+                    1: { hits: 0, attempts: 0 },
+                    2: { hits: 0, attempts: 0 },
+                    3: { hits: 0, attempts: 0 },
+                    4: { hits: 0, attempts: 0 },
+                    5: { hits: 0, attempts: 0 }
+                },
+                streakBest: 0,
+                // Perfection mode specific
+                perfectionProgress: {
+                    1: { current: 0, completed: false },
+                    2: { current: 0, completed: false },
+                    3: { current: 0, completed: false },
+                    4: { current: 0, completed: false },
+                    5: { current: 0, completed: false }
+                },
+                perfectionTarget: 3,
+                // Target mode specific
+                targetGoal: 0,
             },
+            
+            // All-time stats
+            allTimeStats: null,
+            
+            // Session history
+            sessionHistory: [],
+            
             // Adaptive difficulty
             adaptiveWeights: [1, 1, 1, 1, 1],
-            // Game mode specific
-            targetGoal: 0,
-            perfectionGoal: 0,
-            perfectionProgress: {},
-            gameStartTime: null
+            
+            // Audio Detection
+            audioEnabled: false,
+            audioContext: null,
+            analyser: null,
+            microphone: null,
+            calibrationData: {
+                threshold: 0,
+                samples: [],
+                isCalibrating: false,
+                currentSample: 0
+            },
+            
+            // Correction timer
+            correctionTimer: null,
+            correctionActive: false,
+            lastAutoDetectedSegment: null
         };
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            loadStats();
+            loadAllStats();
             initializeGameModes();
             generateNext();
             updateDisplay();
         });
+
+        // Load all statistics
+        function loadAllStats() {
+            // Load all-time stats
+            const savedAllTime = localStorage.getItem('kickerAllTimeStats');
+            if (savedAllTime) {
+                gameState.allTimeStats = JSON.parse(savedAllTime);
+            } else {
+                gameState.allTimeStats = createEmptyStats();
+            }
+            
+            // Load session history
+            const savedHistory = localStorage.getItem('kickerSessionHistory');
+            if (savedHistory) {
+                gameState.sessionHistory = JSON.parse(savedHistory);
+            } else {
+                gameState.sessionHistory = [];
+            }
+        }
+
+        function createEmptyStats() {
+            return {
+                totalSessions: 0,
+                totalHits: 0,
+                totalMisses: 0,
+                totalShots: 0,
+                bestStreak: 0,
+                segmentStats: {
+                    1: { hits: 0, attempts: 0 },
+                    2: { hits: 0, attempts: 0 },
+                    3: { hits: 0, attempts: 0 },
+                    4: { hits: 0, attempts: 0 },
+                    5: { hits: 0, attempts: 0 }
+                },
+                firstPlayed: Date.now(),
+                lastPlayed: Date.now()
+            };
+        }
 
         // Game Mode Selection
         function initializeGameModes() {
@@ -802,22 +1074,49 @@
 
         function startGame() {
             const selectedMode = document.querySelector('.game-mode.selected').dataset.mode;
-            gameState.mode = selectedMode;
-            gameState.gameStartTime = Date.now();
             
-            // Reset game-specific stats
+            // Save previous session if it had data
+            if (gameState.currentSession.total > 0) {
+                saveSession();
+            }
+            
+            // Reset current session
+            gameState.currentSession = {
+                startTime: Date.now(),
+                mode: selectedMode,
+                hits: 0,
+                misses: 0,
+                total: 0,
+                segmentStats: {
+                    1: { hits: 0, attempts: 0 },
+                    2: { hits: 0, attempts: 0 },
+                    3: { hits: 0, attempts: 0 },
+                    4: { hits: 0, attempts: 0 },
+                    5: { hits: 0, attempts: 0 }
+                },
+                streakBest: 0,
+                perfectionProgress: {
+                    1: { current: 0, completed: false },
+                    2: { current: 0, completed: false },
+                    3: { current: 0, completed: false },
+                    4: { current: 0, completed: false },
+                    5: { current: 0, completed: false }
+                },
+                perfectionTarget: 3,
+                targetGoal: 0
+            };
+            
+            // Reset game state
+            gameState.mode = selectedMode;
             gameState.score = 0;
             gameState.streak = 0;
-            gameState.hits = 0;
-            gameState.misses = 0;
-            gameState.total = 0;
+            gameState.currentTarget = null;
             
             // Set mode-specific goals
             if (selectedMode === 'target') {
-                gameState.targetGoal = parseInt(document.getElementById('targetCount').value);
+                gameState.currentSession.targetGoal = parseInt(document.getElementById('targetCount').value);
             } else if (selectedMode === 'perfection') {
-                gameState.perfectionGoal = parseInt(document.getElementById('perfectionCount').value);
-                gameState.perfectionProgress = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+                gameState.currentSession.perfectionTarget = parseInt(document.getElementById('perfectionCount').value);
             }
             
             closeModal();
@@ -854,17 +1153,40 @@
                 updatePassDisplay();
             }
             
-            // Generate target segment with adaptive weighting
-            gameState.currentTarget = getWeightedRandomSegment();
+            // Generate target segment based on mode
+            if (gameState.mode === 'perfection') {
+                // Find next incomplete segment
+                const incompleteSegments = [];
+                for (let i = 1; i <= 5; i++) {
+                    if (!gameState.currentSession.perfectionProgress[i].completed) {
+                        incompleteSegments.push(i);
+                    }
+                }
+                
+                if (incompleteSegments.length > 0) {
+                    // If we don't have a current target or it's completed, pick a random incomplete one
+                    if (!gameState.currentTarget || gameState.currentSession.perfectionProgress[gameState.currentTarget].completed) {
+                        gameState.currentTarget = incompleteSegments[Math.floor(Math.random() * incompleteSegments.length)];
+                    }
+                    // Otherwise keep the same target (for consecutive hits)
+                } else {
+                    // All segments completed
+                    showGameComplete();
+                    return;
+                }
+            } else {
+                // Other modes: weighted random
+                gameState.currentTarget = getWeightedRandomSegment();
+            }
             
             // Highlight target
             setTimeout(() => {
-                document.querySelector(`[data-segment="${gameState.currentTarget}"]`).classList.add('active');
+                const segment = document.querySelector(`[data-segment="${gameState.currentTarget}"]`);
+                if (segment) segment.classList.add('active');
             }, 100);
         }
 
         function getWeightedRandomSegment() {
-            // Use adaptive weights based on performance
             const weights = [...gameState.adaptiveWeights];
             const totalWeight = weights.reduce((a, b) => a + b, 0);
             let random = Math.random() * totalWeight;
@@ -875,7 +1197,7 @@
                     return i + 1;
                 }
             }
-            return 5; // Fallback
+            return 5;
         }
 
         function updatePassDisplay() {
@@ -888,58 +1210,85 @@
 
         // Handle Segment Click
         function handleSegmentClick(segment) {
+            // If in correction mode, handle as correction
+            if (gameState.correctionActive && gameState.lastAutoDetectedSegment !== null) {
+                handleCorrection(segment);
+                return;
+            }
+            
+            // Normal click handling
             if (gameState.currentTarget === null) return;
             
             const segmentEl = document.querySelector(`[data-segment="${segment}"]`);
-            gameState.total++;
-            gameState.segmentStats[gameState.currentTarget].attempts++;
+            gameState.currentSession.total++;
+            gameState.currentSession.segmentStats[gameState.currentTarget].attempts++;
             
             if (segment === gameState.currentTarget) {
                 // Correct hit
+                processHit(segment, segmentEl, true);
+            } else {
+                // Wrong hit
+                processHit(segment, segmentEl, false);
+            }
+        }
+
+        function processHit(segment, segmentEl, isCorrect) {
+            if (isCorrect) {
                 segmentEl.classList.add('hit-correct');
-                gameState.hits++;
-                gameState.segmentStats[segment].hits++;
+                gameState.currentSession.hits++;
+                gameState.currentSession.segmentStats[segment].hits++;
                 gameState.score++;
                 gameState.streak++;
                 
-                // Update adaptive weights (reduce weight for successful segments)
+                // Update adaptive weights
                 gameState.adaptiveWeights[segment - 1] = Math.max(0.5, gameState.adaptiveWeights[segment - 1] * 0.95);
                 
                 // Handle perfection mode
                 if (gameState.mode === 'perfection') {
-                    gameState.perfectionProgress[segment]++;
-                    checkPerfectionComplete();
+                    gameState.currentSession.perfectionProgress[segment].current++;
+                    
+                    if (gameState.currentSession.perfectionProgress[segment].current >= gameState.currentSession.perfectionTarget) {
+                        gameState.currentSession.perfectionProgress[segment].completed = true;
+                        gameState.currentSession.perfectionProgress[segment].current = 0;
+                    }
                 }
                 
                 // Check target mode
-                if (gameState.mode === 'target' && gameState.hits >= gameState.targetGoal) {
+                if (gameState.mode === 'target' && gameState.currentSession.hits >= gameState.currentSession.targetGoal) {
                     showGameComplete();
                 }
                 
-                // Add haptic feedback if available
+                // Haptic feedback
                 if (window.navigator.vibrate) {
                     window.navigator.vibrate(50);
                 }
             } else {
-                // Wrong hit
                 segmentEl.classList.add('hit-wrong');
-                gameState.score = Math.max(0, gameState.score - 1);
+                gameState.currentSession.misses++;
                 gameState.streak = 0;
-                gameState.misses++;
                 
-                // Add haptic feedback if available
+                // Reset perfection progress for current target
+                if (gameState.mode === 'perfection') {
+                    gameState.currentSession.perfectionProgress[gameState.currentTarget].current = 0;
+                }
+                
+                // Increase weight for missed segments
+                gameState.adaptiveWeights[gameState.currentTarget - 1] = Math.min(3, gameState.adaptiveWeights[gameState.currentTarget - 1] * 1.1);
+                
+                // Haptic feedback
                 if (window.navigator.vibrate) {
                     window.navigator.vibrate([50, 50, 50]);
                 }
             }
             
             // Update max streak
-            if (gameState.streak > gameState.maxStreak) {
-                gameState.maxStreak = gameState.streak;
+            if (gameState.streak > gameState.currentSession.streakBest) {
+                gameState.currentSession.streakBest = gameState.streak;
             }
             
             updateDisplay();
-            saveStats();
+            updateAllTimeStats();
+            saveAllStats();
             
             // Generate next after animation
             setTimeout(() => {
@@ -951,15 +1300,25 @@
         function registerMiss() {
             if (gameState.currentTarget === null) return;
             
-            gameState.total++;
-            gameState.misses++;
+            // Cancel correction if active
+            if (gameState.correctionActive) {
+                cancelCorrection();
+            }
+            
+            gameState.currentSession.total++;
+            gameState.currentSession.misses++;
+            gameState.currentSession.segmentStats[gameState.currentTarget].attempts++;
             gameState.streak = 0;
-            gameState.segmentStats[gameState.currentTarget].attempts++;
+            
+            // Reset perfection progress
+            if (gameState.mode === 'perfection') {
+                gameState.currentSession.perfectionProgress[gameState.currentTarget].current = 0;
+            }
             
             // Increase weight for missed segments
             gameState.adaptiveWeights[gameState.currentTarget - 1] = Math.min(3, gameState.adaptiveWeights[gameState.currentTarget - 1] * 1.1);
             
-            // Visual feedback on miss button
+            // Visual feedback
             const missBtn = document.querySelector('.btn-miss');
             missBtn.style.transform = 'scale(0.95)';
             setTimeout(() => {
@@ -972,111 +1331,515 @@
             }
             
             updateDisplay();
-            saveStats();
+            updateAllTimeStats();
+            saveAllStats();
             generateNext();
+        }
+
+        // Audio Detection Functions
+        async function toggleAudioDetection() {
+            if (!gameState.audioEnabled) {
+                await startAudioDetection();
+            } else {
+                stopAudioDetection();
+            }
+        }
+
+        async function startAudioDetection() {
+            try {
+                // Request microphone access
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                });
+                
+                // Create audio context
+                gameState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                gameState.analyser = gameState.audioContext.createAnalyser();
+                gameState.analyser.fftSize = 2048;
+                
+                // Connect microphone to analyser
+                gameState.microphone = gameState.audioContext.createMediaStreamSource(stream);
+                gameState.microphone.connect(gameState.analyser);
+                
+                // Start calibration if no threshold set
+                if (gameState.calibrationData.threshold === 0) {
+                    startCalibration();
+                } else {
+                    gameState.audioEnabled = true;
+                    document.getElementById('audioBtn').classList.add('active');
+                    document.getElementById('audioIndicator').classList.add('active', 'listening');
+                    startAudioMonitoring();
+                }
+            } catch (error) {
+                console.error('Mikrofon-Zugriff verweigert:', error);
+                alert('Bitte Mikrofon-Zugriff erlauben für Audio-Erkennung');
+            }
+        }
+
+        function stopAudioDetection() {
+            gameState.audioEnabled = false;
+            document.getElementById('audioBtn').classList.remove('active');
+            document.getElementById('audioIndicator').classList.remove('active', 'listening');
+            
+            if (gameState.microphone) {
+                gameState.microphone.disconnect();
+                gameState.microphone = null;
+            }
+            
+            if (gameState.audioContext) {
+                gameState.audioContext.close();
+                gameState.audioContext = null;
+            }
+        }
+
+        // Calibration Functions
+        function startCalibration() {
+            gameState.calibrationData.isCalibrating = true;
+            gameState.calibrationData.currentSample = 0;
+            gameState.calibrationData.samples = [];
+            
+            document.getElementById('calibrationModal').classList.add('active');
+            updateCalibrationUI();
+            
+            // Start recording
+            startCalibrationRecording();
+        }
+
+        function startCalibrationRecording() {
+            const bufferLength = gameState.analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            let maxLevel = 0;
+            let recordingData = [];
+            
+            const record = () => {
+                if (!gameState.calibrationData.isCalibrating) return;
+                
+                gameState.analyser.getByteFrequencyData(dataArray);
+                const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+                recordingData.push(average);
+                maxLevel = Math.max(maxLevel, average);
+                
+                requestAnimationFrame(record);
+            };
+            
+            record();
+            
+            // Store recording data for this calibration shot
+            gameState.calibrationData.currentRecording = {
+                data: recordingData,
+                maxLevel: maxLevel
+            };
+        }
+
+        function confirmCalibrationShot() {
+            // Save the peak from current recording
+            if (gameState.calibrationData.currentRecording) {
+                gameState.calibrationData.samples.push(gameState.calibrationData.currentRecording.maxLevel);
+            }
+            
+            gameState.calibrationData.currentSample++;
+            
+            if (gameState.calibrationData.currentSample >= 3) {
+                // Calibration complete
+                finishCalibration();
+            } else {
+                // Next shot
+                updateCalibrationUI();
+                startCalibrationRecording();
+            }
+        }
+
+        function updateCalibrationUI() {
+            const dots = ['cal1', 'cal2', 'cal3'];
+            dots.forEach((id, index) => {
+                const dot = document.getElementById(id);
+                dot.classList.remove('active', 'completed');
+                if (index < gameState.calibrationData.currentSample) {
+                    dot.classList.add('completed');
+                } else if (index === gameState.calibrationData.currentSample) {
+                    dot.classList.add('active');
+                }
+            });
+            
+            document.getElementById('calibrationInstruction').textContent = 
+                `Schuss ${gameState.calibrationData.currentSample + 1} von 3 - Schieße jetzt ein Tor!`;
+        }
+
+        function finishCalibration() {
+            // Calculate threshold as 70% of average peak
+            const avgPeak = gameState.calibrationData.samples.reduce((a, b) => a + b) / gameState.calibrationData.samples.length;
+            gameState.calibrationData.threshold = avgPeak * 0.7;
+            
+            // Save calibration
+            localStorage.setItem('audioCalibration', JSON.stringify({
+                threshold: gameState.calibrationData.threshold,
+                samples: gameState.calibrationData.samples
+            }));
+            
+            // Close modal and start monitoring
+            document.getElementById('calibrationModal').classList.remove('active');
+            gameState.calibrationData.isCalibrating = false;
+            gameState.audioEnabled = true;
+            document.getElementById('audioBtn').classList.add('active');
+            document.getElementById('audioIndicator').classList.add('active', 'listening');
+            
+            startAudioMonitoring();
+        }
+
+        function cancelCalibration() {
+            gameState.calibrationData.isCalibrating = false;
+            document.getElementById('calibrationModal').classList.remove('active');
+            stopAudioDetection();
+        }
+
+        // Audio Monitoring
+        function startAudioMonitoring() {
+            if (!gameState.audioEnabled || !gameState.analyser) return;
+            
+            const bufferLength = gameState.analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            let cooldown = false;
+            
+            const monitor = () => {
+                if (!gameState.audioEnabled) return;
+                
+                gameState.analyser.getByteFrequencyData(dataArray);
+                const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+                
+                // Update level indicator
+                const levelBar = document.getElementById('audioLevelBar');
+                if (levelBar) {
+                    levelBar.style.width = Math.min(100, (average / gameState.calibrationData.threshold) * 100) + '%';
+                }
+                
+                // Check for goal detection
+                if (average > gameState.calibrationData.threshold && !cooldown && gameState.currentTarget && !gameState.correctionActive) {
+                    // Goal detected!
+                    handleAudioGoalDetection();
+                    
+                    // Cooldown to prevent multiple detections
+                    cooldown = true;
+                    setTimeout(() => { cooldown = false; }, 2000);
+                }
+                
+                requestAnimationFrame(monitor);
+            };
+            
+            monitor();
+        }
+
+        function handleAudioGoalDetection() {
+            // Flash indicator
+            const indicator = document.getElementById('audioIndicator');
+            indicator.classList.add('detected');
+            setTimeout(() => indicator.classList.remove('detected'), 500);
+            
+            // Assume correct hit
+            gameState.lastAutoDetectedSegment = gameState.currentTarget;
+            const segmentEl = document.querySelector(`[data-segment="${gameState.currentTarget}"]`);
+            
+            // Process as correct hit
+            processHit(gameState.currentTarget, segmentEl, true);
+            
+            // Start correction timer
+            startCorrectionTimer();
+        }
+
+        // Correction Timer
+        function startCorrectionTimer() {
+            gameState.correctionActive = true;
+            const timer = document.getElementById('correctionTimer');
+            const fill = document.getElementById('correctionTimerFill');
+            
+            timer.classList.add('active');
+            fill.style.width = '100%';
+            
+            let timeLeft = 5000; // 5 seconds
+            const interval = 100; // Update every 100ms
+            
+            gameState.correctionTimer = setInterval(() => {
+                timeLeft -= interval;
+                fill.style.width = (timeLeft / 5000 * 100) + '%';
+                
+                if (timeLeft <= 0) {
+                    cancelCorrection();
+                }
+            }, interval);
+        }
+
+        function handleCorrection(actualSegment) {
+            if (!gameState.correctionActive) return;
+            
+            // Cancel timer
+            cancelCorrection();
+            
+            // Revert the automatic detection
+            gameState.currentSession.hits--;
+            gameState.currentSession.segmentStats[gameState.lastAutoDetectedSegment].hits--;
+            gameState.score--;
+            
+            // Apply the correction
+            if (actualSegment !== gameState.lastAutoDetectedSegment) {
+                // It was actually a different segment or miss
+                const segmentEl = document.querySelector(`[data-segment="${actualSegment}"]`);
+                processHit(actualSegment, segmentEl, actualSegment === gameState.lastAutoDetectedSegment);
+            }
+        }
+
+        function cancelCorrection() {
+            if (gameState.correctionTimer) {
+                clearInterval(gameState.correctionTimer);
+                gameState.correctionTimer = null;
+            }
+            gameState.correctionActive = false;
+            gameState.lastAutoDetectedSegment = null;
+            document.getElementById('correctionTimer').classList.remove('active');
         }
 
         // Update Display
         function updateDisplay() {
-            // Header stats
-            const hitRate = gameState.total > 0 ? Math.round((gameState.hits / gameState.total) * 100) : 0;
+            // Header stats (current session)
+            const hitRate = gameState.currentSession.total > 0 ? 
+                Math.round((gameState.currentSession.hits / gameState.currentSession.total) * 100) : 0;
             document.getElementById('hitRate').textContent = hitRate + '%';
             document.getElementById('streak').textContent = gameState.streak;
-            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('score').textContent = gameState.currentSession.hits;
             
-            // Update segment stats
+            // Update segment stats display
             for (let i = 1; i <= 5; i++) {
-                const stats = gameState.segmentStats[i];
-                const rate = stats.attempts > 0 ? Math.round((stats.hits / stats.attempts) * 100) : 0;
+                const stats = gameState.currentSession.segmentStats[i];
+                const rate = stats.attempts > 0 ? 
+                    Math.round((stats.hits / stats.attempts) * 100) : 0;
                 const segmentEl = document.querySelector(`[data-segment="${i}"] .segment-stats`);
                 segmentEl.textContent = `${stats.hits}/${stats.attempts} (${rate}%)`;
-                
-                // Update detailed stats
-                document.getElementById(`seg${i}-hits`).textContent = stats.hits;
-                document.getElementById(`seg${i}-total`).textContent = stats.attempts;
-                document.getElementById(`seg${i}-rate`).textContent = rate + '%';
-                document.getElementById(`seg${i}-progress`).style.width = rate + '%';
+            }
+            
+            // Update detailed stats if open
+            if (document.getElementById('statsOverlay').classList.contains('active')) {
+                updateStatsDisplay();
             }
         }
 
         // Stats Management
         function toggleStats() {
-            document.getElementById('statsOverlay').classList.toggle('active');
-        }
-
-        function saveStats() {
-            const stats = {
-                segmentStats: gameState.segmentStats,
-                totalHits: gameState.hits,
-                totalMisses: gameState.misses,
-                totalAttempts: gameState.total,
-                maxStreak: gameState.maxStreak,
-                adaptiveWeights: gameState.adaptiveWeights,
-                lastPlayed: Date.now()
-            };
-            localStorage.setItem('kickerStats', JSON.stringify(stats));
-        }
-
-        function loadStats() {
-            const saved = localStorage.getItem('kickerStats');
-            if (saved) {
-                const stats = JSON.parse(saved);
-                gameState.segmentStats = stats.segmentStats || gameState.segmentStats;
-                gameState.adaptiveWeights = stats.adaptiveWeights || gameState.adaptiveWeights;
-                gameState.maxStreak = stats.maxStreak || 0;
+            const overlay = document.getElementById('statsOverlay');
+            overlay.classList.toggle('active');
+            if (overlay.classList.contains('active')) {
+                updateStatsDisplay();
             }
         }
 
-        function resetStats() {
-            if (confirm('Wirklich alle Statistiken zurücksetzen?')) {
-                // Reset all stats
-                gameState.segmentStats = {
-                    1: { hits: 0, attempts: 0 },
-                    2: { hits: 0, attempts: 0 },
-                    3: { hits: 0, attempts: 0 },
-                    4: { hits: 0, attempts: 0 },
-                    5: { hits: 0, attempts: 0 }
-                };
-                gameState.adaptiveWeights = [1, 1, 1, 1, 1];
-                gameState.score = 0;
-                gameState.streak = 0;
-                gameState.maxStreak = 0;
-                gameState.hits = 0;
-                gameState.misses = 0;
-                gameState.total = 0;
+        function showStatsTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show correct content
+            document.querySelectorAll('.stats-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            if (tab === 'current') {
+                updateCurrentStatsDisplay();
+            } else if (tab === 'history') {
+                updateHistoryDisplay();
+            } else if (tab === 'trends') {
+                updateTrendsDisplay();
+            }
+        }
+
+        function updateStatsDisplay() {
+            updateCurrentStatsDisplay();
+        }
+
+        function updateCurrentStatsDisplay() {
+            const container = document.getElementById('currentStats');
+            container.style.display = 'block';
+            
+            let html = '<div class="session-item">';
+            html += `<h3>Modus: ${gameState.mode}</h3>`;
+            html += `<p>Treffer: ${gameState.currentSession.hits} / ${gameState.currentSession.total}</p>`;
+            html += `<p>Trefferquote: ${gameState.currentSession.total > 0 ? 
+                Math.round((gameState.currentSession.hits / gameState.currentSession.total) * 100) : 0}%</p>`;
+            html += `<p>Beste Serie: ${gameState.currentSession.streakBest}</p>`;
+            
+            if (gameState.mode === 'perfection') {
+                html += '<h4>Fortschritt:</h4>';
+                for (let i = 1; i <= 5; i++) {
+                    const prog = gameState.currentSession.perfectionProgress[i];
+                    html += `<p>Segment ${i}: ${prog.current}/${gameState.currentSession.perfectionTarget} ${prog.completed ? '✓' : ''}</p>`;
+                }
+            }
+            
+            html += '</div>';
+            
+            // Segment details
+            for (let i = 1; i <= 5; i++) {
+                const stats = gameState.currentSession.segmentStats[i];
+                const rate = stats.attempts > 0 ? Math.round((stats.hits / stats.attempts) * 100) : 0;
                 
-                localStorage.removeItem('kickerStats');
-                updateDisplay();
+                html += `
+                    <div class="segment-detail">
+                        <h3>Segment ${i} <span>${rate}%</span></h3>
+                        <div>Treffer: ${stats.hits} / ${stats.attempts}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${rate}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function updateHistoryDisplay() {
+            const container = document.getElementById('historyStats');
+            container.style.display = 'block';
+            
+            if (gameState.sessionHistory.length === 0) {
+                container.innerHTML = '<p>Noch keine abgeschlossenen Sessions</p>';
+                return;
+            }
+            
+            let html = '';
+            gameState.sessionHistory.slice(-10).reverse().forEach(session => {
+                const date = new Date(session.startTime);
+                const hitRate = session.total > 0 ? Math.round((session.hits / session.total) * 100) : 0;
+                
+                html += `
+                    <div class="session-item">
+                        <div class="session-date">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
+                        <div>Modus: ${session.mode}</div>
+                        <div>Treffer: ${session.hits}/${session.total} (${hitRate}%)</div>
+                        <div>Beste Serie: ${session.streakBest}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateTrendsDisplay() {
+            const container = document.getElementById('trendsStats');
+            container.style.display = 'block';
+            
+            // Calculate trends from session history
+            if (gameState.sessionHistory.length < 2) {
+                container.innerHTML = '<p>Mindestens 2 Sessions für Trends benötigt</p>';
+                return;
+            }
+            
+            // Get last 5 sessions
+            const recentSessions = gameState.sessionHistory.slice(-5);
+            
+            // Calculate average hit rate trend
+            const hitRates = recentSessions.map(s => 
+                s.total > 0 ? (s.hits / s.total) * 100 : 0
+            );
+            
+            const avgHitRate = hitRates.reduce((a, b) => a + b) / hitRates.length;
+            const trend = hitRates[hitRates.length - 1] - hitRates[0];
+            
+            let html = '<h3>Performance Trends</h3>';
+            html += `<p>Durchschnittliche Trefferquote: ${Math.round(avgHitRate)}%</p>`;
+            html += `<p>Trend: ${trend > 0 ? '📈' : '📉'} ${Math.abs(Math.round(trend))}%</p>`;
+            
+            // Segment performance over time
+            html += '<h3>Segment-Entwicklung</h3>';
+            for (let i = 1; i <= 5; i++) {
+                let segmentTrend = 0;
+                if (recentSessions.length > 1) {
+                    const firstRate = recentSessions[0].segmentStats[i].attempts > 0 ?
+                        (recentSessions[0].segmentStats[i].hits / recentSessions[0].segmentStats[i].attempts) * 100 : 0;
+                    const lastRate = recentSessions[recentSessions.length - 1].segmentStats[i].attempts > 0 ?
+                        (recentSessions[recentSessions.length - 1].segmentStats[i].hits / recentSessions[recentSessions.length - 1].segmentStats[i].attempts) * 100 : 0;
+                    segmentTrend = lastRate - firstRate;
+                }
+                
+                html += `<p>Segment ${i}: ${segmentTrend > 0 ? '↑' : '↓'} ${Math.abs(Math.round(segmentTrend))}%</p>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function saveSession() {
+            const session = { ...gameState.currentSession };
+            session.endTime = Date.now();
+            session.duration = session.endTime - session.startTime;
+            
+            gameState.sessionHistory.push(session);
+            
+            // Keep only last 100 sessions
+            if (gameState.sessionHistory.length > 100) {
+                gameState.sessionHistory = gameState.sessionHistory.slice(-100);
+            }
+            
+            saveAllStats();
+        }
+
+        function updateAllTimeStats() {
+            // Update all-time stats with current session data
+            gameState.allTimeStats.totalHits = (gameState.allTimeStats.totalHits || 0) + 
+                (gameState.currentSession.hits - (gameState.lastSessionHits || 0));
+            gameState.allTimeStats.totalShots = (gameState.allTimeStats.totalShots || 0) + 
+                (gameState.currentSession.total - (gameState.lastSessionTotal || 0));
+            
+            gameState.lastSessionHits = gameState.currentSession.hits;
+            gameState.lastSessionTotal = gameState.currentSession.total;
+            
+            if (gameState.streak > (gameState.allTimeStats.bestStreak || 0)) {
+                gameState.allTimeStats.bestStreak = gameState.streak;
+            }
+            
+            gameState.allTimeStats.lastPlayed = Date.now();
+        }
+
+        function saveAllStats() {
+            localStorage.setItem('kickerAllTimeStats', JSON.stringify(gameState.allTimeStats));
+            localStorage.setItem('kickerSessionHistory', JSON.stringify(gameState.sessionHistory));
+            localStorage.setItem('kickerAdaptiveWeights', JSON.stringify(gameState.adaptiveWeights));
+        }
+
+        function resetStats() {
+            if (confirm('Wirklich ALLE Statistiken löschen? Dies kann nicht rückgängig gemacht werden!')) {
+                localStorage.removeItem('kickerAllTimeStats');
+                localStorage.removeItem('kickerSessionHistory');
+                localStorage.removeItem('kickerAdaptiveWeights');
+                localStorage.removeItem('audioCalibration');
+                
+                gameState.allTimeStats = createEmptyStats();
+                gameState.sessionHistory = [];
+                gameState.adaptiveWeights = [1, 1, 1, 1, 1];
+                gameState.calibrationData.threshold = 0;
+                
+                // Reset current session
+                startGame();
                 toggleStats();
             }
         }
 
         // Game Completion
-        function checkPerfectionComplete() {
-            const allComplete = Object.values(gameState.perfectionProgress).every(
-                count => count >= gameState.perfectionGoal
-            );
-            
-            if (allComplete) {
-                showGameComplete();
-            }
-        }
-
         function showGameComplete() {
-            const duration = Math.round((Date.now() - gameState.gameStartTime) / 1000);
-            const hitRate = Math.round((gameState.hits / gameState.total) * 100);
+            const duration = Math.round((Date.now() - gameState.currentSession.startTime) / 1000);
+            const hitRate = Math.round((gameState.currentSession.hits / gameState.currentSession.total) * 100);
             
             let message = '🎉 Training abgeschlossen!\n\n';
             
             if (gameState.mode === 'target') {
-                message += `${gameState.targetGoal} Treffer erreicht!\n`;
+                message += `${gameState.currentSession.targetGoal} Treffer erreicht!\n`;
             } else if (gameState.mode === 'perfection') {
-                message += `Alle Segmente ${gameState.perfectionGoal}x getroffen!\n`;
+                message += `Alle Segmente ${gameState.currentSession.perfectionTarget}x nacheinander getroffen!\n`;
             }
             
             message += `Zeit: ${duration}s\n`;
             message += `Trefferquote: ${hitRate}%\n`;
-            message += `Beste Serie: ${gameState.maxStreak}`;
+            message += `Beste Serie: ${gameState.currentSession.streakBest}`;
+            
+            saveSession();
             
             setTimeout(() => {
                 alert(message);
@@ -1110,10 +1873,13 @@
                 case 'n':
                     showGameModal();
                     break;
+                case 'a':
+                    toggleAudioDetection();
+                    break;
             }
         });
 
-        // Touch gesture support for swipe
+        // Touch gestures
         let touchStartX = 0;
         let touchStartY = 0;
 
@@ -1134,15 +1900,10 @@
             }
         });
 
-        // Prevent accidental zoom
+        // Prevent zoom
         document.addEventListener('gesturestart', (e) => {
             e.preventDefault();
         });
-
-        // Service Worker for PWA (optional)
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(() => {});
-        }
     </script>
 </body>
 </html>
