@@ -943,7 +943,7 @@
     </div>
 
     <script>
-        // Game State
+        // Game State - KORRIGIERT
         let gameState = {
             mode: 'free',
             passEnabled: true,
@@ -990,24 +990,24 @@
             // Adaptive difficulty
             adaptiveWeights: [1, 1, 1, 1, 1],
             
-            // Audio Detection - KOMPLETT ERSETZEN
+            // Audio Detection - KORRIGIERT
             audioEnabled: false,
             audioContext: null,
             analyser: null,
             microphone: null,
             calibrationData: {
-                threshold: 50,
+                threshold: 50, // Standard-Threshold
                 samples: [],
                 isCalibrating: false,
                 currentSample: 0,
                 currentRecording: null
-            }, // <- Komma hinzugefügt
+            }, // <- KOMMA HINZUGEFÜGT
             
             // Correction timer
             correctionTimer: null,
             correctionActive: false,
             lastAutoDetectedSegment: null
-            };
+        }; // <- SEMIKOLON HINZUGEFÜGT
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -1348,58 +1348,39 @@
 
         async function startAudioDetection() {
             try {
-                // Mikrofon-Zugriff (gleich wie vorher)
+                // Request microphone access
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: {
                         echoCancellation: false,
                         noiseSuppression: false,
-                        autoGainControl: false,
-                        sampleRate: 44100 // Explizit setzen
+                        autoGainControl: false
                     }
                 });
                 
-                // Audio-Context erstellen
+                // Create audio context
                 gameState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Sample-Rate speichern
-                gameState.calibrationData.sampleRate = gameState.audioContext.sampleRate;
-                
-                // Analyser konfigurieren
                 gameState.analyser = gameState.audioContext.createAnalyser();
-                gameState.analyser.fftSize = gameState.calibrationData.fftSize;
-                gameState.analyser.smoothingTimeConstant = gameState.calibrationData.smoothingTimeConstant;
+                gameState.analyser.fftSize = 2048;
                 
-                // Mikrofonquelle verbinden
+                // Connect microphone to analyser
                 gameState.microphone = gameState.audioContext.createMediaStreamSource(stream);
                 gameState.microphone.connect(gameState.analyser);
                 
-                // Prüfen ob Kalibrierung vorhanden
-                const savedCalibration = localStorage.getItem('audioPatternCalibration');
-                if (savedCalibration) {
-                    const calibration = JSON.parse(savedCalibration);
-                    // Prüfen ob Kalibrierung noch aktuell (nicht älter als 7 Tage)
-                    if (Date.now() - calibration.calibratedAt < 7 * 24 * 60 * 60 * 1000) {
-                        gameState.calibrationData.referencePattern = calibration.referencePattern;
-                        gameState.calibrationData.patternThreshold = calibration.threshold;
-                        gameState.calibrationData.threshold = calibration.legacyThreshold;
-                        
-                        // Direkt mit Detection starten
-                        gameState.audioEnabled = true;
-                        document.getElementById('audioBtn').classList.add('active');
-                        document.getElementById('audioIndicator').classList.add('active', 'listening');
-                        startAudioMonitoring();
-                        return;
-                    }
+                // Start calibration if no threshold set
+                if (gameState.calibrationData.threshold === 50) { // Default threshold
+                    startCalibration();
+                } else {
+                    gameState.audioEnabled = true;
+                    document.getElementById('audioBtn').classList.add('active');
+                    document.getElementById('audioIndicator').classList.add('active', 'listening');
+                    startAudioMonitoring();
                 }
-                
-                // Neue Kalibrierung starten
-                startCalibration();
-                
             } catch (error) {
                 console.error('Mikrofon-Zugriff verweigert:', error);
                 alert('Bitte Mikrofon-Zugriff erlauben für Audio-Erkennung');
             }
         }
+
         function stopAudioDetection() {
             gameState.audioEnabled = false;
             document.getElementById('audioBtn').classList.remove('active');
@@ -1461,51 +1442,30 @@
                 stop: () => { recordingActive = false; }
             };
         }
-    
-            function confirmCalibrationShot() {
-                if (!gameState.calibrationData.isCalibrating) return;
-                
-                // Speichere den Peak-Wert dieser Aufnahme
-                if (gameState.calibrationData.currentRecording) {
-                    const maxLevel = gameState.calibrationData.currentRecording.getMaxLevel();
-                    gameState.calibrationData.samples.push(maxLevel);
-                    gameState.calibrationData.currentRecording.stop();
-                }
-                
-                gameState.calibrationData.currentSample++;
-                
-                if (gameState.calibrationData.currentSample >= 3) {
-                    // Kalibrierung abschließen
-                    finishCalibration();
-                } else {
-                    // Nächster Schuss
-                    updateCalibrationUI();
-                    startCalibrationRecording();
-                }
+
+        function confirmCalibrationShot() {
+            if (!gameState.calibrationData.isCalibrating) return;
+            
+            // Speichere den Peak-Wert dieser Aufnahme
+            if (gameState.calibrationData.currentRecording) {
+                const maxLevel = gameState.calibrationData.currentRecording.getMaxLevel();
+                gameState.calibrationData.samples.push(maxLevel);
+                gameState.calibrationData.currentRecording.stop();
             }
             
+            gameState.calibrationData.currentSample++;
             
-            
-            
-    
-            function updateCalibrationUI() {
-                const dots = ['cal1', 'cal2', 'cal3'];
-                dots.forEach((id, index) => {
-                    const dot = document.getElementById(id);
-                    dot.classList.remove('active', 'completed');
-                    if (index < gameState.calibrationData.currentSample) {
-                        dot.classList.add('completed');
-                    } else if (index === gameState.calibrationData.currentSample) {
-                        dot.classList.add('active');
-                    }
-                });
-                
-                document.getElementById('calibrationInstruction').textContent = 
-                    `Schuss ${gameState.calibrationData.currentSample + 1} von 3 - Schieße jetzt ein Tor!`;
+            if (gameState.calibrationData.currentSample >= 3) {
+                // Kalibrierung abschließen
+                finishCalibration();
+            } else {
+                // Nächster Schuss
+                updateCalibrationUI();
+                startCalibrationRecording();
             }
-    
+        }
 
-
+        // NEUE FUNKTION: finishCalibration
         function finishCalibration() {
             // Berechne Durchschnitts-Threshold aus den 3 Samples
             if (gameState.calibrationData.samples.length >= 3) {
@@ -1531,10 +1491,23 @@
             
             startAudioMonitoring();
         }
+
+        function updateCalibrationUI() {
+            const dots = ['cal1', 'cal2', 'cal3'];
+            dots.forEach((id, index) => {
+                const dot = document.getElementById(id);
+                dot.classList.remove('active', 'completed');
+                if (index < gameState.calibrationData.currentSample) {
+                    dot.classList.add('completed');
+                } else if (index === gameState.calibrationData.currentSample) {
+                    dot.classList.add('active');
+                }
+            });
             
-           
-            
-            
+            document.getElementById('calibrationInstruction').textContent = 
+                `Schuss ${gameState.calibrationData.currentSample + 1} von 3 - Schieße jetzt ein Tor!`;
+        }
+
         function cancelCalibration() {
             gameState.calibrationData.isCalibrating = false;
             document.getElementById('calibrationModal').classList.remove('active');
@@ -1623,29 +1596,6 @@
             
             monitor();
         }
-        
-       
-        
-        
-        
-        function updateAudioLevelIndicator(rms) {
-            const levelBar = document.getElementById('audioLevelBar');
-            if (levelBar) {
-                const level = Math.min(100, rms * 200); // Sichtbarere Skalierung
-                levelBar.style.width = level + '%';
-                
-                // Farbe je nach Level
-                if (level > 50) {
-                    levelBar.style.background = '#4CAF50'; // Grün bei guten Levels
-                } else if (level > 20) {
-                    levelBar.style.background = '#FFC107'; // Gelb bei mittleren Levels
-                } else {
-                    levelBar.style.background = '#00c851'; // Standard
-                }
-            }
-        }
-        
-       
 
         function handleAudioGoalDetection() {
             // Flash indicator
@@ -1929,7 +1879,7 @@
                 gameState.allTimeStats = createEmptyStats();
                 gameState.sessionHistory = [];
                 gameState.adaptiveWeights = [1, 1, 1, 1, 1];
-                gameState.calibrationData.threshold = 0;
+                gameState.calibrationData.threshold = 50;
                 
                 // Reset current session
                 startGame();
