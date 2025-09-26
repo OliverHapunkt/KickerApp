@@ -990,16 +990,32 @@
             // Adaptive difficulty
             adaptiveWeights: [1, 1, 1, 1, 1],
             
-            // Audio Detection
+            // Audio Detection - KOMPLETT ERSETZEN
             audioEnabled: false,
             audioContext: null,
             analyser: null,
             microphone: null,
             calibrationData: {
-                threshold: 0,
-                samples: [],
+                // Neue Pattern-basierte Struktur
+                audioPatterns: [], // Array von 3 Audio-Pattern-Objekten
+                patternThreshold: 0.75, // Correlation-Schwellwert (75% Ähnlichkeit)
                 isCalibrating: false,
-                currentSample: 0
+                currentSample: 0,
+                
+                // Kontinuierliche Aufnahme
+                recordingBuffer: [], // Rolling buffer für Audio-Daten
+                recordingStartTime: 0,
+                bufferMaxSize: 88200, // 2 Sekunden bei 44.1kHz
+                patternLength: 2000, // Pattern-Länge in ms
+                
+                // Analysedaten
+                sampleRate: 44100,
+                fftSize: 2048,
+                smoothingTimeConstant: 0.8,
+                
+                // Legacy-Support (wird migriert)
+                threshold: 0,
+                samples: []
             },
             
             // Correction timer
@@ -1347,39 +1363,58 @@
 
         async function startAudioDetection() {
             try {
-                // Request microphone access
+                // Mikrofon-Zugriff (gleich wie vorher)
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: {
                         echoCancellation: false,
                         noiseSuppression: false,
-                        autoGainControl: false
+                        autoGainControl: false,
+                        sampleRate: 44100 // Explizit setzen
                     }
                 });
                 
-                // Create audio context
+                // Audio-Context erstellen
                 gameState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                gameState.analyser = gameState.audioContext.createAnalyser();
-                gameState.analyser.fftSize = 2048;
                 
-                // Connect microphone to analyser
+                // Sample-Rate speichern
+                gameState.calibrationData.sampleRate = gameState.audioContext.sampleRate;
+                
+                // Analyser konfigurieren
+                gameState.analyser = gameState.audioContext.createAnalyser();
+                gameState.analyser.fftSize = gameState.calibrationData.fftSize;
+                gameState.analyser.smoothingTimeConstant = gameState.calibrationData.smoothingTimeConstant;
+                
+                // Mikrofonquelle verbinden
                 gameState.microphone = gameState.audioContext.createMediaStreamSource(stream);
                 gameState.microphone.connect(gameState.analyser);
                 
-                // Start calibration if no threshold set
-                if (gameState.calibrationData.threshold === 0) {
-                    startCalibration();
-                } else {
-                    gameState.audioEnabled = true;
-                    document.getElementById('audioBtn').classList.add('active');
-                    document.getElementById('audioIndicator').classList.add('active', 'listening');
-                    startAudioMonitoring();
+                // Prüfen ob Kalibrierung vorhanden
+                const savedCalibration = localStorage.getItem('audioPatternCalibration');
+                if (savedCalibration) {
+                    const calibration = JSON.parse(savedCalibration);
+                    // Prüfen ob Kalibrierung noch aktuell (nicht älter als 7 Tage)
+                    if (Date.now() - calibration.calibratedAt < 7 * 24 * 60 * 60 * 1000) {
+                        gameState.calibrationData.referencePattern = calibration.referencePattern;
+                        gameState.calibrationData.patternThreshold = calibration.threshold;
+                        gameState.calibrationData.threshold = calibration.legacyThreshold;
+                        
+                        // Direkt mit Detection starten
+                        gameState.audioEnabled = true;
+                        document.getElementById('audioBtn').classList.add('active');
+                        document.getElementById('audioIndicator').classList.add('active', 'listening');
+                        startAudioMonitoring();
+                        return;
+                    }
                 }
+                
+                // Neue Kalibrierung starten
+                startCalibration();
+                
             } catch (error) {
                 console.error('Mikrofon-Zugriff verweigert:', error);
                 alert('Bitte Mikrofon-Zugriff erlauben für Audio-Erkennung');
             }
         }
-
         function stopAudioDetection() {
             gameState.audioEnabled = false;
             document.getElementById('audioBtn').classList.remove('active');
@@ -1410,85 +1445,372 @@
         }
 
         function startCalibrationRecording() {
-            const bufferLength = gameState.analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            let maxLevel = 0;
-            let recordingData = [];
+            if (!gameState.analyser) return;
             
-            const record = () => {
+            const bufferLength = gameState.analyser.frequencyBinCount;
+            const timeDataArray = new Uint8Array(bufferLength);
+            const freqDataArray = new Uint8Array(bufferLength);
+            
+            // Reset buffer für neue Kalibrierung
+            gameState.calibrationData.recordingBuffer = [];
+            gameState.calibrationData.recordingStartTime = Date.now();
+            
+            let lastFrameTime = 0;
+            const targetFPS = 60; // 60fps für smooth recording
+            const frameInterval = 1000 / targetFPS;
+            
+            function recordFrame(currentTime) {
                 if (!gameState.calibrationData.isCalibrating) return;
                 
-                gameState.analyser.getByteFrequencyData(dataArray);
-                const average = dataArray.reduce((a, b) => a + b) / bufferLength;
-                recordingData.push(average);
-                maxLevel = Math.max(maxLevel, average);
-                
-                requestAnimationFrame(record);
-            };
-            
-            record();
-            
-            // Store recording data for this calibration shot
-            gameState.calibrationData.currentRecording = {
-                data: recordingData,
-                maxLevel: maxLevel
-            };
-        }
-
-        function confirmCalibrationShot() {
-            // Save the peak from current recording
-            if (gameState.calibrationData.currentRecording) {
-                gameState.calibrationData.samples.push(gameState.calibrationData.currentRecording.maxLevel);
-            }
-            
-            gameState.calibrationData.currentSample++;
-            
-            if (gameState.calibrationData.currentSample >= 3) {
-                // Calibration complete
-                finishCalibration();
-            } else {
-                // Next shot
-                updateCalibrationUI();
-                startCalibrationRecording();
-            }
-        }
-
-        function updateCalibrationUI() {
-            const dots = ['cal1', 'cal2', 'cal3'];
-            dots.forEach((id, index) => {
-                const dot = document.getElementById(id);
-                dot.classList.remove('active', 'completed');
-                if (index < gameState.calibrationData.currentSample) {
-                    dot.classList.add('completed');
-                } else if (index === gameState.calibrationData.currentSample) {
-                    dot.classList.add('active');
+                // Frame-Rate-Limiting
+                if (currentTime - lastFrameTime < frameInterval) {
+                    requestAnimationFrame(recordFrame);
+                    return;
                 }
-            });
+                lastFrameTime = currentTime;
+                
+                // Audio-Daten sammeln
+                gameState.analyser.getByteTimeDomainData(timeDataArray);
+                gameState.analyser.getByteFrequencyData(freqDataArray);
+                
+                // Kombinierte Audio-Signatur erstellen
+                const audioFrame = {
+                    timestamp: Date.now() - gameState.calibrationData.recordingStartTime,
+                    timeData: Array.from(timeDataArray),
+                    freqData: Array.from(freqDataArray),
+                    // Zusätzliche Features
+                    rms: calculateRMS(timeDataArray),
+                    spectralCentroid: calculateSpectralCentroid(freqDataArray),
+                    zeroCrossingRate: calculateZeroCrossingRate(timeDataArray)
+                };
+                
+                // Buffer-Management (Rolling Buffer)
+                gameState.calibrationData.recordingBuffer.push(audioFrame);
+                if (gameState.calibrationData.recordingBuffer.length > gameState.calibrationData.bufferMaxSize / 60) {
+                    gameState.calibrationData.recordingBuffer.shift(); // Alte Daten entfernen
+                }
+                
+                // UI-Update für Visualisierung
+                updateCalibrationVisualization(audioFrame);
+                
+                requestAnimationFrame(recordFrame);
+            }
             
-            document.getElementById('calibrationInstruction').textContent = 
-                `Schuss ${gameState.calibrationData.currentSample + 1} von 3 - Schieße jetzt ein Tor!`;
+            requestAnimationFrame(recordFrame);
         }
-
-        function finishCalibration() {
-            // Calculate threshold as 70% of average peak
-            const avgPeak = gameState.calibrationData.samples.reduce((a, b) => a + b) / gameState.calibrationData.samples.length;
-            gameState.calibrationData.threshold = avgPeak * 0.7;
-            
-            // Save calibration
-            localStorage.setItem('audioCalibration', JSON.stringify({
-                threshold: gameState.calibrationData.threshold,
-                samples: gameState.calibrationData.samples
-            }));
-            
-            // Close modal and start monitoring
-            document.getElementById('calibrationModal').classList.remove('active');
-            gameState.calibrationData.isCalibrating = false;
-            gameState.audioEnabled = true;
-            document.getElementById('audioBtn').classList.add('active');
-            document.getElementById('audioIndicator').classList.add('active', 'listening');
-            
-            startAudioMonitoring();
+        
+        // Hilfsfunktionen für Audio-Features
+        function calculateRMS(timeData) {
+            let sum = 0;
+            for (let i = 0; i < timeData.length; i++) {
+                const normalized = (timeData[i] - 128) / 128;
+                sum += normalized * normalized;
+            }
+            return Math.sqrt(sum / timeData.length);
         }
+        
+        function calculateSpectralCentroid(freqData) {
+            let weightedSum = 0;
+            let magnitudeSum = 0;
+            
+            for (let i = 0; i < freqData.length; i++) {
+                const magnitude = freqData[i];
+                const frequency = i * (gameState.calibrationData.sampleRate / 2) / freqData.length;
+                weightedSum += frequency * magnitude;
+                magnitudeSum += magnitude;
+            }
+            
+            return magnitudeSum > 0 ? weightedSum / magnitudeSum : 0;
+        }
+        
+        function calculateZeroCrossingRate(timeData) {
+            let crossings = 0;
+            for (let i = 1; i < timeData.length; i++) {
+                if ((timeData[i] - 128) * (timeData[i-1] - 128) < 0) {
+                    crossings++;
+                }
+            }
+            return crossings / timeData.length;
+        }
+        
+        function updateCalibrationVisualization(audioFrame) {
+            // Audio-Level-Bar updaten
+            const levelBar = document.getElementById('audioLevelBar');
+            if (levelBar) {
+                const level = audioFrame.rms * 100;
+                levelBar.style.width = Math.min(100, level) + '%';
+            }
+            
+            // Optional: Spektrum-Visualisierung
+            updateSpectrumDisplay(audioFrame.freqData);
+        }
+        
+        function updateSpectrumDisplay(freqData) {
+            // Einfache Spektrum-Anzeige (optional)
+            const indicator = document.getElementById('audioIndicator');
+            if (indicator) {
+                const avgFreq = freqData.reduce((a, b) => a + b) / freqData.length;
+                indicator.style.opacity = Math.min(1, avgFreq / 128);
+            }
+        }
+                
+                // Store recording data for this calibration shot
+                gameState.calibrationData.currentRecording = {
+                    data: recordingData,
+                    maxLevel: maxLevel
+                };
+            }
+    
+            function confirmCalibrationShot() {
+                if (!gameState.calibrationData.isCalibrating) return;
+                
+                // Pattern aus den letzten 2 Sekunden extrahieren
+                const patternEndTime = Date.now() - gameState.calibrationData.recordingStartTime;
+                const patternStartTime = Math.max(0, patternEndTime - gameState.calibrationData.patternLength);
+                
+                // Relevante Audio-Frames filtern
+                const patternFrames = gameState.calibrationData.recordingBuffer.filter(frame => 
+                    frame.timestamp >= patternStartTime && frame.timestamp <= patternEndTime
+                );
+                
+                if (patternFrames.length < 10) { // Mindestens 10 Frames für Pattern
+                    alert('Zu wenig Audio-Daten. Bitte nochmal versuchen.');
+                    return;
+                }
+                
+                // Audio-Pattern erstellen
+                const audioPattern = {
+                    id: gameState.calibrationData.currentSample + 1,
+                    frames: patternFrames,
+                    features: extractPatternFeatures(patternFrames),
+                    recordedAt: Date.now()
+                };
+                
+                // Pattern speichern
+                gameState.calibrationData.audioPatterns.push(audioPattern);
+                gameState.calibrationData.currentSample++;
+                
+                console.log(`Pattern ${gameState.calibrationData.currentSample} gespeichert:`, audioPattern.features);
+                
+                if (gameState.calibrationData.currentSample >= 3) {
+                    // Kalibrierung abschließen
+                    finishPatternCalibration();
+                } else {
+                    // Nächster Schuss
+                    updateCalibrationUI();
+                    // Buffer für nächste Aufnahme vorbereiten
+                    gameState.calibrationData.recordingBuffer = [];
+                    gameState.calibrationData.recordingStartTime = Date.now();
+                }
+            }
+            
+            function extractPatternFeatures(frames) {
+                // Charakteristische Features des Audio-Patterns extrahieren
+                const features = {
+                    duration: frames.length > 0 ? frames[frames.length - 1].timestamp - frames[0].timestamp : 0,
+                    peakRMS: Math.max(...frames.map(f => f.rms)),
+                    avgRMS: frames.reduce((sum, f) => sum + f.rms, 0) / frames.length,
+                    peakSpectralCentroid: Math.max(...frames.map(f => f.spectralCentroid)),
+                    avgSpectralCentroid: frames.reduce((sum, f) => sum + f.spectralCentroid, 0) / frames.length,
+                    avgZeroCrossingRate: frames.reduce((sum, f) => sum + f.zeroCrossingRate, 0) / frames.length,
+                    
+                    // Frequenz-Fingerprint (vereinfacht)
+                    frequencyFingerprint: calculateFrequencyFingerprint(frames),
+                    
+                    // Temporal Pattern
+                    energyEnvelope: frames.map(f => f.rms),
+                    spectralEnvelope: frames.map(f => f.spectralCentroid)
+                };
+                
+                return features;
+            }
+            
+            function calculateFrequencyFingerprint(frames) {
+                // Durchschnittliches Frequenzspektrum über alle Frames
+                const avgSpectrum = new Array(frames[0].freqData.length).fill(0);
+                
+                frames.forEach(frame => {
+                    frame.freqData.forEach((value, index) => {
+                        avgSpectrum[index] += value / frames.length;
+                    });
+                });
+                
+                // Nur die wichtigsten Frequenzbänder (vereinfacht auf 10 Bänder)
+                const bandsPerFingerprint = 10;
+                const bandSize = Math.floor(avgSpectrum.length / bandsPerFingerprint);
+                const fingerprint = [];
+                
+                for (let i = 0; i < bandsPerFingerprint; i++) {
+                    const bandStart = i * bandSize;
+                    const bandEnd = Math.min((i + 1) * bandSize, avgSpectrum.length);
+                    const bandAvg = avgSpectrum.slice(bandStart, bandEnd).reduce((a, b) => a + b) / (bandEnd - bandStart);
+                    fingerprint.push(bandAvg);
+                }
+                
+                return fingerprint;
+            }
+    
+            function updateCalibrationUI() {
+                const dots = ['cal1', 'cal2', 'cal3'];
+                dots.forEach((id, index) => {
+                    const dot = document.getElementById(id);
+                    dot.classList.remove('active', 'completed');
+                    if (index < gameState.calibrationData.currentSample) {
+                        dot.classList.add('completed');
+                    } else if (index === gameState.calibrationData.currentSample) {
+                        dot.classList.add('active');
+                    }
+                });
+                
+                document.getElementById('calibrationInstruction').textContent = 
+                    `Schuss ${gameState.calibrationData.currentSample + 1} von 3 - Schieße jetzt ein Tor!`;
+            }
+    
+            function finishPatternCalibration() {
+                // Gemeinsamkeiten zwischen den 3 Patterns finden
+                const patterns = gameState.calibrationData.audioPatterns;
+                
+                if (patterns.length !== 3) {
+                    alert('Kalibrierung unvollständig. Bitte erneut starten.');
+                    cancelCalibration();
+                    return;
+                }
+                
+                // Pattern-Ähnlichkeit prüfen
+                const similarities = [];
+                for (let i = 0; i < patterns.length; i++) {
+                    for (let j = i + 1; j < patterns.length; j++) {
+                        const similarity = calculatePatternSimilarity(patterns[i], patterns[j]);
+                        similarities.push(similarity);
+                    }
+                }
+                
+                const avgSimilarity = similarities.reduce((a, b) => a + b) / similarities.length;
+                
+                console.log('Pattern-Ähnlichkeiten:', similarities, 'Durchschnitt:', avgSimilarity);
+                
+                if (avgSimilarity < 0.5) { // Zu unähnlich
+                    alert(`Aufnahmen zu unterschiedlich (${Math.round(avgSimilarity * 100)}%). Bitte Kalibrierung wiederholen in ruhigerer Umgebung.`);
+                    gameState.calibrationData.audioPatterns = [];
+                    gameState.calibrationData.currentSample = 0;
+                    updateCalibrationUI();
+                    return;
+                }
+                
+                // Optimalen Threshold basierend auf Pattern-Variabilität setzen
+                gameState.calibrationData.patternThreshold = Math.max(0.6, avgSimilarity * 0.85);
+                
+                // Referenz-Pattern für Detection erstellen (Durchschnitt der 3 Pattern)
+                const referencePattern = createReferencePattern(patterns);
+                gameState.calibrationData.referencePattern = referencePattern;
+                
+                // Legacy-Threshold für Fallback
+                const avgPeakRMS = patterns.reduce((sum, p) => sum + p.features.peakRMS, 0) / patterns.length;
+                gameState.calibrationData.threshold = avgPeakRMS * 0.7;
+                
+                // Kalibrierung speichern
+                const calibrationResult = {
+                    threshold: gameState.calibrationData.patternThreshold,
+                    referencePattern: referencePattern,
+                    legacyThreshold: gameState.calibrationData.threshold,
+                    calibratedAt: Date.now(),
+                    patterns: patterns.map(p => ({
+                        features: p.features,
+                        recordedAt: p.recordedAt
+                    })) // Ohne die großen Frame-Arrays
+                };
+                
+                localStorage.setItem('audioPatternCalibration', JSON.stringify(calibrationResult));
+                
+                // UI-Feedback
+                alert(`Kalibrierung erfolgreich! Pattern-Ähnlichkeit: ${Math.round(avgSimilarity * 100)}%`);
+                
+                // Modal schließen und Detection starten
+                document.getElementById('calibrationModal').classList.remove('active');
+                gameState.calibrationData.isCalibrating = false;
+                gameState.audioEnabled = true;
+                document.getElementById('audioBtn').classList.add('active');
+                document.getElementById('audioIndicator').classList.add('active', 'listening');
+                
+                startAudioMonitoring();
+            }
+            
+            function calculatePatternSimilarity(pattern1, pattern2) {
+                const f1 = pattern1.features;
+                const f2 = pattern2.features;
+                
+                // Verschiedene Feature-Korrelationen
+                const rmsCorrelation = 1 - Math.abs(f1.peakRMS - f2.peakRMS) / Math.max(f1.peakRMS, f2.peakRMS);
+                const centroidCorrelation = 1 - Math.abs(f1.avgSpectralCentroid - f2.avgSpectralCentroid) / Math.max(f1.avgSpectralCentroid, f2.avgSpectralCentroid);
+                const frequencyCorrelation = calculateArrayCorrelation(f1.frequencyFingerprint, f2.frequencyFingerprint);
+                const envelopeCorrelation = calculateArrayCorrelation(f1.energyEnvelope, f2.energyEnvelope);
+                
+                // Gewichtete Gesamtähnlichkeit
+                const totalSimilarity = (
+                    rmsCorrelation * 0.3 +
+                    centroidCorrelation * 0.2 +
+                    frequencyCorrelation * 0.3 +
+                    envelopeCorrelation * 0.2
+                );
+                
+                return Math.max(0, Math.min(1, totalSimilarity));
+            }
+            
+            function calculateArrayCorrelation(arr1, arr2) {
+                if (arr1.length !== arr2.length) {
+                    // Arrays auf gleiche Länge bringen
+                    const minLength = Math.min(arr1.length, arr2.length);
+                    arr1 = arr1.slice(0, minLength);
+                    arr2 = arr2.slice(0, minLength);
+                }
+                
+                if (arr1.length === 0) return 0;
+                
+                // Pearson-Korrelation
+                const mean1 = arr1.reduce((a, b) => a + b) / arr1.length;
+                const mean2 = arr2.reduce((a, b) => a + b) / arr2.length;
+                
+                let numerator = 0;
+                let sumSq1 = 0;
+                let sumSq2 = 0;
+                
+                for (let i = 0; i < arr1.length; i++) {
+                    const diff1 = arr1[i] - mean1;
+                    const diff2 = arr2[i] - mean2;
+                    numerator += diff1 * diff2;
+                    sumSq1 += diff1 * diff1;
+                    sumSq2 += diff2 * diff2;
+                }
+                
+                const denominator = Math.sqrt(sumSq1 * sumSq2);
+                return denominator === 0 ? 0 : numerator / denominator;
+            }
+            
+            function createReferencePattern(patterns) {
+                // Durchschnittliches Pattern aus allen 3 Kalibrierungen
+                const avgFeatures = {
+                    peakRMS: patterns.reduce((sum, p) => sum + p.features.peakRMS, 0) / patterns.length,
+                    avgRMS: patterns.reduce((sum, p) => sum + p.features.avgRMS, 0) / patterns.length,
+                    avgSpectralCentroid: patterns.reduce((sum, p) => sum + p.features.avgSpectralCentroid, 0) / patterns.length,
+                    avgZeroCrossingRate: patterns.reduce((sum, p) => sum + p.features.avgZeroCrossingRate, 0) / patterns.length,
+                };
+                
+                // Durchschnittlicher Frequenz-Fingerprint
+                const fingerprintLength = patterns[0].features.frequencyFingerprint.length;
+                avgFeatures.frequencyFingerprint = new Array(fingerprintLength).fill(0);
+                
+                patterns.forEach(pattern => {
+                    pattern.features.frequencyFingerprint.forEach((value, index) => {
+                        avgFeatures.frequencyFingerprint[index] += value / patterns.length;
+                    });
+                });
+                
+                return {
+                    features: avgFeatures,
+                    createdAt: Date.now(),
+                    basedOnPatterns: patterns.length
+                };
+            }
 
         function cancelCalibration() {
             gameState.calibrationData.isCalibrating = false;
@@ -1498,6 +1820,237 @@
 
         // Audio Monitoring
         function startAudioMonitoring() {
+            if (!gameState.audioEnabled || !gameState.analyser) return;
+            
+            // Pattern-basierte Detektion laden
+            const saved = localStorage.getItem('audioPatternCalibration');
+            if (saved) {
+                const calibration = JSON.parse(saved);
+                gameState.calibrationData.referencePattern = calibration.referencePattern;
+                gameState.calibrationData.patternThreshold = calibration.threshold;
+                gameState.calibrationData.threshold = calibration.legacyThreshold || 0.5;
+            }
+            
+            if (!gameState.calibrationData.referencePattern) {
+                console.warn('Keine Referenz-Pattern vorhanden, verwende Legacy-Detection');
+                startLegacyAudioMonitoring();
+                return;
+            }
+            
+            const bufferLength = gameState.analyser.frequencyBinCount;
+            const timeDataArray = new Uint8Array(bufferLength);
+            const freqDataArray = new Uint8Array(bufferLength);
+            
+            let detectionBuffer = []; // Rolling buffer für Detection
+            let cooldownEnd = 0;
+            let lastFrameTime = 0;
+            const frameInterval = 1000 / 30; // 30fps für Detection (weniger CPU-Last)
+            
+            function monitorFrame(currentTime) {
+                if (!gameState.audioEnabled) return;
+                
+                // Frame-Rate-Limiting
+                if (currentTime - lastFrameTime < frameInterval) {
+                    requestAnimationFrame(monitorFrame);
+                    return;
+                }
+                lastFrameTime = currentTime;
+                
+                // Audio-Daten sammeln
+                gameState.analyser.getByteTimeDomainData(timeDataArray);
+                gameState.analyser.getByteFrequencyData(freqDataArray);
+                
+                const audioFrame = {
+                    timestamp: Date.now(),
+                    timeData: Array.from(timeDataArray),
+                    freqData: Array.from(freqDataArray),
+                    rms: calculateRMS(timeDataArray),
+                    spectralCentroid: calculateSpectralCentroid(freqDataArray),
+                    zeroCrossingRate: calculateZeroCrossingRate(timeDataArray)
+                };
+                
+                // Detection-Buffer verwalten (2 Sekunden)
+                detectionBuffer.push(audioFrame);
+                const cutoffTime = Date.now() - gameState.calibrationData.patternLength;
+                detectionBuffer = detectionBuffer.filter(frame => frame.timestamp > cutoffTime);
+                
+                // Level-Indicator updaten
+                updateAudioLevelIndicator(audioFrame.rms);
+                
+                // Cooldown prüfen
+                if (Date.now() < cooldownEnd) {
+                    requestAnimationFrame(monitorFrame);
+                    return;
+                }
+                
+                // Pattern-Detection nur wenn genug Daten vorhanden
+                if (detectionBuffer.length >= 30) { // Mindestens 1 Sekunde Daten bei 30fps
+                    const detectionScore = performPatternDetection(detectionBuffer);
+                    
+                    // Debug-Output
+                    if (detectionScore > 0.3) {
+                        console.log('Detection Score:', detectionScore.toFixed(3));
+                    }
+                    
+                    // Tor erkannt?
+                    if (detectionScore > gameState.calibrationData.patternThreshold && 
+                        gameState.currentTarget && 
+                        !gameState.correctionActive) {
+                        
+                        handlePatternGoalDetection(detectionScore);
+                        
+                        // Cooldown setzen
+                        cooldownEnd = Date.now() + 2000; // 2 Sekunden
+                        detectionBuffer = []; // Buffer leeren
+                    }
+                }
+                
+                requestAnimationFrame(monitorFrame);
+            }
+            
+            requestAnimationFrame(monitorFrame);
+        }
+        
+        function performPatternDetection(buffer) {
+            if (!gameState.calibrationData.referencePattern || buffer.length < 10) return 0;
+            
+            // Current Pattern aus Buffer erstellen
+            const currentFeatures = extractPatternFeatures(buffer);
+            const referenceFeatures = gameState.calibrationData.referencePattern.features;
+            
+            // Multi-Feature-Vergleich
+            const scores = [];
+            
+            // 1. RMS-Ähnlichkeit (Lautstärke-Pattern)
+            const rmsScore = calculateFeatureSimilarity(
+                currentFeatures.peakRMS, 
+                referenceFeatures.peakRMS,
+                'rms'
+            );
+            scores.push(rmsScore * 0.25);
+            
+            // 2. Spektrale Ähnlichkeit
+            const spectralScore = calculateFeatureSimilarity(
+                currentFeatures.avgSpectralCentroid,
+                referenceFeatures.avgSpectralCentroid,
+                'spectral'
+            );
+            scores.push(spectralScore * 0.20);
+            
+            // 3. Frequenz-Fingerprint-Ähnlichkeit (wichtigster Faktor)
+            const frequencyScore = calculateArrayCorrelation(
+                currentFeatures.frequencyFingerprint,
+                referenceFeatures.frequencyFingerprint
+            );
+            scores.push(Math.max(0, frequencyScore) * 0.35);
+            
+            // 4. Energy-Envelope-Ähnlichkeit
+            const envelopeScore = calculateEnergyEnvelopeScore(
+                currentFeatures.energyEnvelope,
+                buffer.length > 60 ? 60 : buffer.length // Max 2 Sekunden
+            );
+            scores.push(envelopeScore * 0.20);
+            
+            const totalScore = scores.reduce((a, b) => a + b, 0);
+            
+            // Debug-Info bei hohen Scores
+            if (totalScore > 0.5) {
+                console.log('Pattern-Detection:', {
+                    total: totalScore.toFixed(3),
+                    rms: (scores[0] / 0.25).toFixed(3),
+                    spectral: (scores[1] / 0.20).toFixed(3),
+                    frequency: (scores[2] / 0.35).toFixed(3),
+                    envelope: (scores[3] / 0.20).toFixed(3)
+                });
+            }
+            
+            return totalScore;
+        }
+        
+        function calculateFeatureSimilarity(current, reference, type) {
+            if (reference === 0) return 0;
+            
+            const ratio = Math.min(current, reference) / Math.max(current, reference);
+            
+            // Typ-spezifische Anpassungen
+            switch (type) {
+                case 'rms':
+                    // RMS sollte ähnliche Größenordnung haben
+                    return current > reference * 0.3 ? ratio : 0;
+                case 'spectral':
+                    // Spektrale Zentroide können mehr variieren
+                    return ratio > 0.7 ? ratio : 0;
+                default:
+                    return ratio;
+            }
+        }
+        
+        function calculateEnergyEnvelopeScore(envelope, maxLength) {
+            // Prüfe auf charakteristische Tor-Schuss-Energy-Pattern
+            if (envelope.length < 10) return 0;
+            
+            // Tor-Schuss hat typischerweise: ruhig → plötzlicher Peak → abfallend
+            const firstThird = envelope.slice(0, Math.floor(envelope.length / 3));
+            const middleThird = envelope.slice(Math.floor(envelope.length / 3), Math.floor(envelope.length * 2 / 3));
+            const lastThird = envelope.slice(Math.floor(envelope.length * 2 / 3));
+            
+            const firstThirdAvg = firstThird.reduce((a, b) => a + b) / firstThird.length;
+            const middleThirdMax = Math.max(...middleThird);
+            const lastThirdAvg = lastThird.reduce((a, b) => a + b) / lastThird.length;
+            
+            // Score basierend auf typischem Pattern: niedrig → hoch → mittel
+            const peakRatio = firstThirdAvg > 0 ? middleThirdMax / firstThirdAvg : 0;
+            const decayRatio = middleThirdMax > 0 ? (middleThirdMax - lastThirdAvg) / middleThirdMax : 0;
+            
+            // Tor-Schuss sollte Peak-Ratio > 2 und Decay-Ratio > 0.3 haben
+            let score = 0;
+            if (peakRatio > 2) score += 0.5;
+            if (decayRatio > 0.3) score += 0.5;
+            
+            return Math.min(1, score);
+        }
+        
+        function updateAudioLevelIndicator(rms) {
+            const levelBar = document.getElementById('audioLevelBar');
+            if (levelBar) {
+                const level = Math.min(100, rms * 200); // Sichtbarere Skalierung
+                levelBar.style.width = level + '%';
+                
+                // Farbe je nach Level
+                if (level > 50) {
+                    levelBar.style.background = '#4CAF50'; // Grün bei guten Levels
+                } else if (level > 20) {
+                    levelBar.style.background = '#FFC107'; // Gelb bei mittleren Levels
+                } else {
+                    levelBar.style.background = '#00c851'; // Standard
+                }
+            }
+        }
+        
+        function handlePatternGoalDetection(score) {
+            // Erfolgreiches Pattern erkannt!
+            console.log(`Tor-Pattern erkannt! Score: ${score.toFixed(3)}`);
+            
+            // Visual Feedback
+            const indicator = document.getElementById('audioIndicator');
+            indicator.classList.add('detected');
+            setTimeout(() => indicator.classList.remove('detected'), 500);
+            
+            // Automatischer Treffer
+            gameState.lastAutoDetectedSegment = gameState.currentTarget;
+            const segmentEl = document.querySelector(`[data-segment="${gameState.currentTarget}"]`);
+            
+            if (segmentEl) {
+                processHit(gameState.currentTarget, segmentEl, true);
+            }
+            
+            // Korrektur-Timer starten
+            startCorrectionTimer();
+        }
+    
+    
+        function startLegacyAudioMonitoring() {
+            console.log('Verwende Legacy Audio Detection');
             if (!gameState.audioEnabled || !gameState.analyser) return;
             
             const bufferLength = gameState.analyser.frequencyBinCount;
